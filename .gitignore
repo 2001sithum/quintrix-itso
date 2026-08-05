@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+*.db
+*.db-wal
+*.db-shm
+archive/
+data/
+.DS_Store
+
+# downloaded model weights — auto-fetched on first run, not source
+*.pt
+*.pth
+model_cache/
+
+# python virtualenv
+.venv/
+venv/
+
+# editor / os
+.vscode/
+*.log

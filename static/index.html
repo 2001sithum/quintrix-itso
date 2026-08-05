@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quintrix ITSO — Intelligent Tiered Storage Optimization</title>
+<meta name="description" content="Intelligent Tiered Storage Optimization for smart surveillance — context-aware anomaly detection, forensic search, and tiered archival.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff3b5c'/%3E%3Cstop offset='1' stop-color='%23ff7849'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='40' height='40' rx='9' fill='url(%23g)'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<div id="app">
+  <!-- ===== AUTH GATE ===== -->
+  <section id="auth" class="auth">
+    <div class="auth-card">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div>
+          <div class="brand-name">QUINTRIX</div>
+          <div class="brand-sub">INTELLIGENT TIERED STORAGE OPTIMIZATION</div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-auth="login">Sign in</button>
+        <button class="tab" data-auth="register">Register</button>
+      </div>
+
+      <!-- login -->
+      <form id="login-form" class="auth-form">
+        <label>Username<input name="username" autocomplete="username" required></label>
+        <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+        <button class="primary" type="submit">Sign in</button>
+        <p class="hint">Default admin — <code>admin</code> / <code>admin123</code></p>
+      </form>
+
+      <!-- register -->
+      <form id="register-form" class="auth-form hidden">
+        <label>Username<input name="username" required></label>
+        <label>Full name<input name="full_name"></label>
+        <label>Password
+          <input name="password" type="password" id="reg-pass" required>
+        </label>
+        <div class="strength"><div class="strength-bar" id="str-bar"></div></div>
+        <div class="strength-label" id="str-label">Enter a password</div>
+        <button class="primary" type="submit">Create account</button>
+        <p class="hint">New accounts require administrator approval before sign-in.</p>
+      </form>
+      <div id="auth-msg" class="auth-msg"></div>
+    </div>
+  </section>
+
+  <!-- ===== MAIN CONSOLE ===== -->
+  <div id="console" class="console hidden">
+    <header class="topbar">
+      <div class="brand small">
+        <div class="brand-mark"></div>
+        <div><div class="brand-name">QUINTRIX</div><div class="brand-sub">ITSO ENGINE</div></div>
+      </div>
+      <nav id="nav"></nav>
+      <div class="userbox">
+        <span id="who"></span>
+        <button id="logout" class="ghost">Sign out</button>
+      </div>
+    </header>
+
+    <main id="view"></main>
+  </div>
+
+  <!-- ===== METADATA MODAL ===== -->
+  <div id="modal-backdrop" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="modal-title">Segment Metadata</h3>
+        <button id="modal-close" class="ghost">✕</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+    </div>
+  </div>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
