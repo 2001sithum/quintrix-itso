@@ -168,23 +168,47 @@ async function doUpload(file) {
 async function loadProjects() {
   const rows = await api('/projects');
   if (!$('#plist')) return;
+  const canManage = ['Administrator', 'SecurityOperator'].includes(S.role);
   $('#plist').innerHTML = rows.length ? `<table><thead><tr>
     <th>Project</th><th>File</th><th>Status</th><th>Segments</th><th>Saved</th><th></th></tr></thead><tbody>${
     rows.map(p => {
       const saved = p.original_bytes ? Math.round((1 - p.stored_bytes / p.original_bytes) * 100) : 0;
       return `<tr>
-        <td style="font-family:var(--mono)">${p.id.slice(0, 10)}</td>
-        <td>${esc(p.filename)}</td>
+        <td>
+          <span class="pname" id="pname-${p.id}">${esc(p.name || p.filename)}</span>
+          ${canManage ? `<button class="btn sm ghost-icon" title="Rename" onclick="renameProject('${p.id}')">✎</button>` : ''}
+        </td>
+        <td style="color:var(--dim);font-size:12px">${esc(p.filename)}</td>
         <td><span class="pill ${p.status}">${p.status}</span></td>
         <td>${p.segs}</td>
         <td>${saved > 0 ? saved + '%' : '—'}</td>
         <td><button class="btn sm" onclick="openProject('${p.id}')">Open</button>
-        ${['Administrator', 'SecurityOperator'].includes(S.role) ? `<button class="btn sm danger" onclick="delProject('${p.id}')">Delete</button>` : ''}</td>
+        ${canManage ? `<button class="btn sm danger" onclick="delProject('${p.id}')">Delete</button>` : ''}</td>
       </tr>`;
     }).join('')}</tbody></table>` : '<div class="empty">No projects yet. Upload footage to begin.</div>';
   if (rows.some(p => p.status === 'processing')) setTimeout(loadProjects, 2500);
 }
 
+window.renameProject = async id => {
+  const el = $('#pname-' + id);
+  const current = el.textContent;
+  el.outerHTML = `<span id="pname-${id}">
+    <input id="pname-input-${id}" value="${esc(current)}" style="width:200px;padding:4px 8px;
+      background:var(--bg);border:1px solid var(--line2);border-radius:6px;color:var(--text);font-size:13px">
+    <button class="btn sm" onclick="saveProjectName('${id}')">Save</button>
+  </span>`;
+  const input = $('#pname-input-' + id);
+  input.focus(); input.select();
+  input.onkeydown = e => { if (e.key === 'Enter') saveProjectName(id); if (e.key === 'Escape') loadProjects(); };
+};
+window.saveProjectName = async id => {
+  const name = $('#pname-input-' + id).value.trim();
+  if (!name) { toast('Name cannot be empty'); return; }
+  const fd = new FormData(); fd.append('name', name);
+  try { await api('/projects/' + id, { method: 'PATCH', body: fd }); toast('Project renamed'); }
+  catch (e) { toast(e.message); }
+  loadProjects();
+};
 window.delProject = async id => {
   if (!confirm('Delete project and all segments/files?')) return;
   await api('/projects/' + id, { method: 'DELETE' }); toast('Project deleted'); loadProjects(); $('#pdetail').innerHTML = '';
@@ -195,9 +219,9 @@ window.openProject = async id => {
   const p = d.project;
   $('#pdetail').innerHTML = `<div class="card" style="margin-top:14px">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
-      <h3 style="margin:0;font-family:var(--mono)">${p.id.slice(0, 12)}</h3>
+      <h3 style="margin:0">${esc(p.name || p.filename)}</h3>
       <span class="pill ${p.status}">${p.status}</span></div>
-    <p class="sub">${esc(p.filename)} · ${(p.duration || 0).toFixed(1)}s · ${p.width}×${p.height} · ${(p.fps || 0).toFixed(0)}fps</p>
+    <p class="sub">${esc(p.filename)} · <span style="font-family:var(--mono)">${p.id.slice(0, 12)}</span> · ${(p.duration || 0).toFixed(1)}s · ${p.width}×${p.height} · ${(p.fps || 0).toFixed(0)}fps</p>
     ${d.segments.map(segCard).join('') || '<div class="empty">No segments.</div>'}
   </div>`;
   if (p.status === 'processing') setTimeout(() => openProject(id), 2500);
@@ -229,7 +253,8 @@ function segCard(s) {
           <button class="btn sm" onclick="viewMeta('${s.id}')">Metadata</button>
           ${['Administrator', 'SecurityOperator'].includes(S.role) ? `
           <select class="btn sm" onchange="setTier('${s.id}',this.value)" style="margin-left:4px">
-            <option value="">tier…</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option></select>` : ''}
+            <option value="">tier…</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option></select>
+          <button class="btn sm danger" onclick="delSegment('${s.id}',this)" style="margin-left:4px">Delete</button>` : ''}
         </div>` : ''}
     </div></div>`;
 }
@@ -260,6 +285,12 @@ window.viewMeta = async id => {
 $('#modal-close').onclick = () => $('#modal-backdrop').classList.add('hidden');
 $('#modal-backdrop').onclick = e => { if (e.target.id === 'modal-backdrop') e.target.classList.add('hidden'); };
 document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#modal-backdrop').classList.add('hidden'); });
+window.delSegment = async (id, btn) => {
+  if (!confirm('Delete this segment and its files? This cannot be undone.')) return;
+  await api('/segments/' + id, { method: 'DELETE' });
+  toast('Segment deleted');
+  btn.closest('.seg')?.remove();
+};
 window.setTier = async (id, tier) => {
   if (!tier) return;
   const fd = new FormData(); fd.append('tier', tier);
@@ -298,6 +329,7 @@ async function runSearch() {
 VIEWS.alerts = async () => {
   V.innerHTML = `<h2>Security Alerts</h2><p class="sub">High-significance events requiring operator review.</p><div id="alist"></div>`;
   const rows = await api('/alerts');
+  const isAdmin = S.role === 'Administrator';
   $('#alist').innerHTML = rows.length ? `<table><thead><tr><th>Time</th><th>Severity</th><th>Ssig</th><th>Detail</th><th>Status</th><th></th></tr></thead><tbody>${
     rows.map(a => `<tr>
       <td style="font-family:var(--mono)">${new Date(a.ts).toLocaleString()}</td>
@@ -305,10 +337,18 @@ VIEWS.alerts = async () => {
       <td>${a.ssig.toFixed(2)}</td>
       <td style="font-size:12px">${esc((a.detail.objects || []).join(', '))} · ${esc(a.detail.hazard || '')}</td>
       <td><span class="pill ${a.status === 'new' ? 'processing' : 'done'}">${a.status}</span></td>
-      <td>${a.status === 'new' ? `<button class="btn sm" onclick="ackAlert(${a.id})">Acknowledge</button>` : esc(a.ack_by)}</td>
+      <td>${a.status === 'new' ? `<button class="btn sm" onclick="ackAlert(${a.id})">Acknowledge</button>` : esc(a.ack_by)}
+        ${isAdmin ? `<button class="btn sm danger" onclick="delAlert(${a.id},this)" style="margin-left:4px">Delete</button>` : ''}</td>
     </tr>`).join('')}</tbody></table>` : '<div class="empty">No alerts.</div>';
 };
 window.ackAlert = async id => { await api('/alerts/' + id + '/ack', { method: 'POST' }); toast('Acknowledged'); VIEWS.alerts(); pollAlerts(); };
+window.delAlert = async (id, btn) => {
+  if (!confirm('Delete this alert record?')) return;
+  await api('/alerts/' + id, { method: 'DELETE' });
+  toast('Alert deleted');
+  btn.closest('tr')?.remove();
+  pollAlerts();
+};
 
 VIEWS.config = async () => {
   const c = await api('/config');
@@ -367,25 +407,59 @@ function logLine(r) {
 }
 
 VIEWS.users = async () => {
-  V.innerHTML = `<h2>User Management</h2><p class="sub">Approve registrations and assign roles (FR03, 56).</p><div id="ulist"></div>`;
+  V.innerHTML = `<h2>User Management</h2><p class="sub">Approve registrations, edit roles, and remove accounts (FR03, 56).</p><div id="ulist"></div>`;
+  loadUsers();
+};
+const ROLE_OPTS = ['User', 'SecurityOperator', 'Administrator'];
+async function loadUsers() {
   const rows = await api('/admin/users');
   $('#ulist').innerHTML = `<table><thead><tr><th>User</th><th>Name</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>${
-    rows.map(u => `<tr>
-      <td style="font-family:var(--mono)">${esc(u.username)}</td>
+    rows.map(u => {
+      const isSelf = u.username === S.user;
+      return `<tr id="urow-${u.id}">
+      <td style="font-family:var(--mono)">${esc(u.username)}${isSelf ? ' <span class="chip">you</span>' : ''}</td>
       <td>${esc(u.full_name || '')}</td>
       <td>${esc(u.role)}</td>
       <td><span class="pill ${u.status}">${u.status}</span></td>
       <td>${u.status === 'pending' ? `
-        <select id="role-${u.id}" class="btn sm"><option>User</option><option>SecurityOperator</option><option>Administrator</option></select>
+        <select id="role-${u.id}" class="btn sm">${ROLE_OPTS.map(r => `<option>${r}</option>`).join('')}</select>
         <button class="btn sm" onclick="approve(${u.id},'approve')">Approve</button>
-        <button class="btn sm danger" onclick="approve(${u.id},'reject')">Reject</button>` : '—'}</td>
-    </tr>`).join('')}</tbody></table>`;
-};
+        <button class="btn sm danger" onclick="approve(${u.id},'reject')">Reject</button>` : `
+        <button class="btn sm" onclick="editUser(${u.id})">Edit</button>
+        ${!isSelf ? `<button class="btn sm danger" onclick="deleteUser(${u.id})">Delete</button>` : ''}`}</td>
+    </tr>`;
+    }).join('')}</tbody></table>`;
+}
 window.approve = async (id, action) => {
   const fd = new FormData(); fd.append('action', action);
   const sel = $('#role-' + id); if (sel) fd.append('role', sel.value);
   await api('/admin/users/' + id + '/approve', { method: 'POST', body: fd });
-  toast('User ' + (action === 'approve' ? 'approved' : 'rejected')); VIEWS.users();
+  toast('User ' + (action === 'approve' ? 'approved' : 'rejected')); loadUsers();
+};
+window.editUser = row => {
+  const tr = $('#urow-' + row);
+  const cells = tr.querySelectorAll('td');
+  const name = cells[1].textContent.trim(), role = cells[2].textContent.trim();
+  cells[1].innerHTML = `<input id="edit-name-${row}" value="${esc(name)}" style="width:140px;padding:4px 8px;
+    background:var(--bg);border:1px solid var(--line2);border-radius:6px;color:var(--text);font-size:13px">`;
+  cells[2].innerHTML = `<select id="edit-role-${row}" class="btn sm">${
+    ROLE_OPTS.map(r => `<option ${r === role ? 'selected' : ''}>${r}</option>`).join('')}</select>`;
+  cells[4].innerHTML = `<button class="btn sm" onclick="saveUser(${row})">Save</button>
+    <button class="btn sm" onclick="loadUsers()">Cancel</button>`;
+};
+window.saveUser = async row => {
+  const fd = new FormData();
+  fd.append('full_name', $('#edit-name-' + row).value.trim());
+  fd.append('role', $('#edit-role-' + row).value);
+  try { await api('/admin/users/' + row, { method: 'PATCH', body: fd }); toast('User updated'); }
+  catch (e) { toast(e.message); }
+  loadUsers();
+};
+window.deleteUser = async id => {
+  if (!confirm('Delete this user account? This cannot be undone.')) return;
+  try { await api('/admin/users/' + id, { method: 'DELETE' }); toast('User deleted'); }
+  catch (e) { toast(e.message); }
+  loadUsers();
 };
 
 // ---------- alert badge polling (FR42) ----------

@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS projects (
   id TEXT PRIMARY KEY,
   job_id TEXT,
   owner_id INTEGER,
+  name TEXT,
   filename TEXT,
   original_path TEXT,
   status TEXT DEFAULT 'uploaded',
@@ -169,6 +170,11 @@ def init_db():
                 ALTER TABLE alerts_new RENAME TO alerts;
             """)
             con.execute("PRAGMA foreign_keys = ON")
+        # migrate pre-existing DBs that predate the editable project name (CRUD)
+        cols = [r[1] for r in con.execute("PRAGMA table_info(projects)").fetchall()]
+        if "name" not in cols:
+            con.execute("ALTER TABLE projects ADD COLUMN name TEXT")
+            con.execute("UPDATE projects SET name = filename WHERE name IS NULL")
         con.commit()
 
 

@@ -156,6 +156,57 @@ async def approve_user(uid: int, request: Request, action: str = Form(...),
     return {"status": status}
 
 
+ROLES = ("Administrator", "SecurityOperator", "User")
+
+
+def _active_admin_count(exclude_uid=None):
+    row = sm.q("SELECT COUNT(*) n FROM users WHERE role='Administrator' AND status='active'"
+               + (" AND id!=?" if exclude_uid else ""),
+               (exclude_uid,) if exclude_uid else ())
+    return row[0]["n"]
+
+
+@app.patch("/api/admin/users/{uid}")            # FR56 admin user control
+async def update_user(uid: int, request: Request, full_name: Optional[str] = Form(None),
+                      role: Optional[str] = Form(None)):
+    require(request, ["Administrator"])
+    target = sm.q("SELECT * FROM users WHERE id=?", (uid,), one=True)
+    if not target:
+        raise HTTPException(404)
+    if role is not None:
+        if role not in ROLES:
+            raise HTTPException(400, "Invalid role")
+        if target["role"] == "Administrator" and role != "Administrator" \
+                and _active_admin_count(exclude_uid=uid) == 0:
+            raise HTTPException(400, "Cannot demote the last active Administrator")
+    fields, args = [], []
+    if full_name is not None:
+        fields.append("full_name=?"); args.append(full_name)
+    if role is not None:
+        fields.append("role=?"); args.append(role)
+    if fields:
+        args.append(uid)
+        sm.execute(f"UPDATE users SET {','.join(fields)} WHERE id=?", tuple(args))
+    sm.log("audit", f"User {uid} updated", context={"full_name": full_name, "role": role})
+    return {"status": "updated"}
+
+
+@app.delete("/api/admin/users/{uid}")           # FR56 admin user control
+async def delete_user(uid: int, request: Request):
+    u = require(request, ["Administrator"])
+    target = sm.q("SELECT * FROM users WHERE id=?", (uid,), one=True)
+    if not target:
+        raise HTTPException(404)
+    if target["id"] == u["id"]:
+        raise HTTPException(400, "Cannot delete your own account")
+    if target["role"] == "Administrator" and target["status"] == "active" \
+            and _active_admin_count(exclude_uid=uid) == 0:
+        raise HTTPException(400, "Cannot delete the last active Administrator")
+    sm.execute("DELETE FROM users WHERE id=?", (uid,))     # cascades sessions
+    sm.log("audit", f"User deleted: {target['username']}")
+    return {"status": "deleted"}
+
+
 # ---------------------------------------------------------------------------
 # FR08 upload + FR29 async processing
 # ---------------------------------------------------------------------------
@@ -179,9 +230,10 @@ async def upload(request: Request, file: UploadFile = File(...)):
                 f.close(); os.remove(dest)
                 raise HTTPException(400, "File exceeds 500MB")
             f.write(chunk)
-    sm.execute("INSERT INTO projects(id,job_id,owner_id,filename,original_path,status,"
-               "created_at,original_bytes) VALUES(?,?,?,?,?,?,?,?)",
-               (pid, jid, u["id"], file.filename, dest, "uploaded", sm.now(), size))
+    default_name = os.path.splitext(file.filename)[0]
+    sm.execute("INSERT INTO projects(id,job_id,owner_id,name,filename,original_path,status,"
+               "created_at,original_bytes) VALUES(?,?,?,?,?,?,?,?,?)",
+               (pid, jid, u["id"], default_name, file.filename, dest, "uploaded", sm.now(), size))
     sm.log("system", f"Upload: {file.filename}", user=u["username"],
            context={"project": pid, "job": jid})
     threading.Thread(target=itso_engine.process_project, args=(pid,), daemon=True).start()
@@ -206,6 +258,19 @@ async def project_detail(pid: str, request: Request):
     for s in segs:
         s["objects"] = json.loads(s["objects"]); s["actions"] = json.loads(s["actions"])
     return {"project": p, "segments": segs}
+
+
+@app.patch("/api/projects/{pid}")              # FR50 project management (rename)
+async def rename_project(pid: str, request: Request, name: str = Form(...)):
+    require(request, ["Administrator", "SecurityOperator"])
+    name = name.strip()
+    if not name:
+        raise HTTPException(400, "Name cannot be empty")
+    if not sm.q("SELECT 1 FROM projects WHERE id=?", (pid,), one=True):
+        raise HTTPException(404)
+    sm.execute("UPDATE projects SET name=? WHERE id=?", (name, pid))
+    sm.log("audit", f"Project renamed: {pid}", context={"name": name})
+    return {"status": "updated", "name": name}
 
 
 # FR27/50/51 deletion with cascade
@@ -371,6 +436,16 @@ async def ack_alert(aid: int, request: Request):
                (u["username"], sm.now(), aid))
     sm.log("audit", f"Alert {aid} acknowledged", user=u["username"])
     return {"status": "acknowledged"}
+
+
+@app.delete("/api/alerts/{aid}")
+async def delete_alert(aid: int, request: Request):
+    u = require(request, ["Administrator"])
+    if not sm.q("SELECT 1 FROM alerts WHERE id=?", (aid,), one=True):
+        raise HTTPException(404)
+    sm.execute("DELETE FROM alerts WHERE id=?", (aid,))
+    sm.log("audit", f"Alert {aid} deleted", user=u["username"])
+    return {"status": "deleted"}
 
 
 # ---------------------------------------------------------------------------

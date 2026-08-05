@@ -23,6 +23,8 @@ Roles: `Administrator`, `SecurityOperator`, `User`. An endpoint with no
 |---|---|---|---|
 | GET | `/admin/users` | Administrator | — |
 | POST | `/admin/users/{uid}/approve` | Administrator | `action=approve\|reject, role` |
+| PATCH | `/admin/users/{uid}` | Administrator | `full_name?, role?` — edits any active/pending user |
+| DELETE | `/admin/users/{uid}` | Administrator | Blocks self-deletion and deleting the last active Administrator |
 
 ## Projects & upload
 
@@ -31,6 +33,7 @@ Roles: `Administrator`, `SecurityOperator`, `User`. An endpoint with no
 | POST | `/projects` | any | `multipart/form-data` with `file` (mp4/avi/mov/mkv, ≤500MB). Returns immediately; pipeline runs in the background |
 | GET | `/projects` | any | List, newest first, with live segment counts |
 | GET | `/projects/{pid}` | any | Project + all its segments |
+| PATCH | `/projects/{pid}` | Administrator, SecurityOperator | `name` — rename the project (defaults to the uploaded filename) |
 | DELETE | `/projects/{pid}` | Administrator, SecurityOperator | Cascades segments/events/alerts and deletes archived files |
 | DELETE | `/segments/{sid}` | Administrator, SecurityOperator | Deletes one segment + its files |
 | POST | `/segments/{sid}/tier` | Administrator, SecurityOperator | `tier=HIGH\|MEDIUM\|LOW`, sets `tier_manual=1` |
@@ -63,6 +66,7 @@ demo, but see [DEPLOYMENT.md](DEPLOYMENT.md) before exposing this publicly.
 |---|---|---|---|
 | GET | `/alerts` | Administrator, SecurityOperator | Last 200, newest first |
 | POST | `/alerts/{aid}/ack` | Administrator, SecurityOperator | — (acks with current user + timestamp) |
+| DELETE | `/alerts/{aid}` | Administrator | Permanently removes an alert record |
 
 ## Configuration
 
