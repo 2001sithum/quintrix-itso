@@ -36,7 +36,25 @@ The app is a single container with **local, stateful storage** (SQLite file
 GCP compute product actually fits — pick based on how much you're willing to
 manage vs. how much persistence you need:
 
-### Option A — Compute Engine VM (closest match to current design)
+### Option A — Coolify (recommended if you already run a Coolify instance)
+
+Coolify builds straight from the included `Dockerfile`, so no compose changes
+are needed:
+
+1. In Coolify: **New Resource → Application → Public/Private Repository**,
+   point it at this repo (add it as a GitHub App inside Coolify first if the
+   repo is private, so it can redeploy automatically on push).
+2. Build pack: **Dockerfile** (auto-detected).
+3. Set the exposed port to **8000**.
+4. **Storage tab** — add persistent volumes so data survives redeploys:
+   - container path `/app` → mount a named volume for the SQLite file, or
+   - point `QUINTRIX_DB` / `QUINTRIX_ARCHIVE` env vars at a mounted path if
+     you'd rather keep them out of `/app`
+5. Deploy. Coolify's own Traefik proxy fronts the container — it does not
+   conflict with the container's internal port 8000, and gives you a
+   domain/HTTPS for free if one is configured on the resource.
+
+### Option B — Compute Engine VM (if you'd rather run it standalone)
 
 Matches the app's assumptions exactly: one process, one disk, state persists
 across restarts, no code changes needed.
@@ -59,7 +77,7 @@ Then SSH in, install Docker, `git clone` the repo, and `docker compose up -d
 it does **not** survive deleting the instance unless the disk is detached
 first.
 
-### Option B — Cloud Run (serverless, but storage is ephemeral)
+### Option C — Cloud Run (serverless, but storage is ephemeral)
 
 Cloud Run containers have no persistent local disk between revisions/scale
 events — every restart loses the SQLite database and every archived file.
