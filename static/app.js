@@ -215,7 +215,9 @@ window.delProject = async id => {
   await api('/projects/' + id, { method: 'DELETE' }); toast('Project deleted'); loadProjects(); $('#pdetail').innerHTML = '';
 };
 
+let _curProjectId = null;
 window.openProject = async id => {
+  _curProjectId = id;
   const d = await api('/projects/' + id);
   const p = d.project;
   const isProcessing = p.status === 'processing';
@@ -225,41 +227,95 @@ window.openProject = async id => {
       <span class="pill ${p.status}">${p.status}</span></div>
     <p class="sub">${esc(p.filename)} · <span style="font-family:var(--mono)">${p.id.slice(0, 12)}</span> · ${(p.duration || 0).toFixed(1)}s · ${p.width}×${p.height} · ${(p.fps || 0).toFixed(0)}fps</p>
     ${isProcessing ? pipelineTrackerHTML() : ''}
-    ${!isProcessing && d.segments.length ? segmentTimelineHTML(d.segments, p.duration) : ''}
-    ${d.segments.map(segCard).join('') || (isProcessing ? '' : '<div class="empty">No segments.</div>')}
+    ${!isProcessing && d.segments.length ? analysisShellHTML(d.segments, p.duration) : ''}
+    ${!isProcessing && !d.segments.length ? '<div class="empty">No segments.</div>' : ''}
   </div>`;
   if (isProcessing) startPipelineTracker(id);
+  else if (d.segments.length) selectSegment(0);
 };
 
-// ---------- segment quality timeline (FR32) ----------
-function segmentTimelineHTML(segments, duration) {
+// ---------- video analysis: interactive timeline scrubber + inspector (FR32/38/39) ----------
+let _curSegments = [];
+function fmtTime(sec) { sec = Math.max(0, Math.round(sec)); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); }
+function analysisShellHTML(segments, duration) {
+  _curSegments = segments;
   const total = duration || segments[segments.length - 1]?.end_time || 1;
-  return `<div class="card" style="margin:14px 0;background:var(--panel2)">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-      <h3 style="margin:0;font-size:13px">Quality Timeline</h3>
-      <div style="display:flex;gap:14px;font-size:10px;color:var(--dim)">
-        <span><span class="pill HIGH">HIGH</span> lossless</span>
-        <span><span class="pill MEDIUM">MEDIUM</span> re-encoded</span>
-        <span><span class="pill LOW">LOW</span> keyframe / static</span>
+  return `<div class="analysis-shell" style="margin-top:16px">
+    <div class="scrub">
+      <div class="scrub-head">
+        <h3 style="margin:0;font-size:13px">Video Analysis Timeline</h3>
+        <div class="scrub-legend">
+          <span><span class="pill HIGH">HIGH</span> lossless</span>
+          <span><span class="pill MEDIUM">MEDIUM</span> re-encoded</span>
+          <span><span class="pill LOW">LOW</span> keyframe / static</span>
+        </div>
       </div>
+      <div class="scrub-track" id="scrub-track">${segments.map((s, i) => {
+        const w = Math.max(0.4, (s.end_time - s.start_time) / total * 100).toFixed(3);
+        const col = s.tier === 'HIGH' ? 'hi' : s.tier === 'MEDIUM' ? 'warn' : s.motion ? 'ok' : 'dimmer';
+        return `<div class="scrub-seg" data-idx="${i}" style="width:${w}%;background:var(--${col});--ssig:${Math.round((s.ssig || 0) * 100)}%"
+          title="#${String(s.idx).padStart(3, '0')} · ${s.tier || 'static'} · Ssig ${s.ssig.toFixed(2)}"
+          onclick="selectSegment(${i})"><div class="sb"></div></div>`;
+      }).join('')}</div>
+      <div class="scrub-ruler"><span>0:00</span><span>${fmtTime(total)}</span></div>
     </div>
-    <div class="timeline-track">${segments.map(s => {
-      const w = Math.max(0.5, (s.end_time - s.start_time) / total * 100).toFixed(2);
-      const col = s.tier === 'HIGH' ? 'hi' : s.tier === 'MEDIUM' ? 'warn' : s.motion ? 'ok' : 'dimmer';
-      return `<div class="tl-seg" style="width:${w}%;background:var(--${col})"
-        title="#${String(s.idx).padStart(3, '0')} · ${s.start_time.toFixed(0)}s–${s.end_time.toFixed(0)}s · ${s.tier || 'static'} · Ssig ${s.ssig.toFixed(2)}"
-        onclick="scrollToSegment('${s.id}')"></div>`;
-    }).join('')}</div>
-    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dimmer);margin-top:4px;font-family:var(--mono)">
-      <span>0s</span><span>${total.toFixed(0)}s</span>
-    </div>
+    <div class="inspector" id="inspector"></div>
   </div>`;
 }
-window.scrollToSegment = id => {
-  const el = document.getElementById('seg-' + id);
-  if (!el) return;
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  el.classList.remove('tl-highlight'); void el.offsetWidth; el.classList.add('tl-highlight');
+window.selectSegment = i => {
+  const s = _curSegments[i];
+  if (!s) return;
+  $$('.scrub-seg').forEach(el => el.classList.toggle('selected', +el.dataset.idx === i));
+  const insp = $('#inspector');
+  if (insp) insp.innerHTML = inspectorHTML(s);
+};
+function inspectorHTML(s) {
+  const col = s.threat_level === 'high' ? 'hi' : s.threat_level === 'medium' ? 'warn' : 'ok';
+  const ssigCol = s.ssig >= 0.7 ? 'hi' : s.ssig >= 0.45 ? 'warn' : 'ok';
+  const canManage = ['Administrator', 'SecurityOperator'].includes(S.role);
+  return `<div class="insp-head">
+      ${s.thumb ? `<img class="insp-thumb" src="/api/thumb/${s.id}" onerror="this.style.opacity=.2">` : '<div class="insp-thumb"></div>'}
+      <div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+          <b style="font-size:17px;font-family:var(--mono)">#${String(s.idx).padStart(3, '0')}</b>
+          <span class="pill ${s.tier}">${s.tier || 'static'}</span>
+          <span class="pill" style="color:var(--${col});background:transparent;border-color:var(--${col})">THREAT ${s.threat_level}</span>
+          ${!s.motion ? '<span class="chip">static · skipped</span>' : ''}
+        </div>
+        <span style="font-size:12px;color:var(--dim)">${s.start_time.toFixed(0)}s–${s.end_time.toFixed(0)}s · ${new Date(s.ts).toLocaleString()}</span>
+      </div>
+    </div>
+    ${s.motion ? `
+    <div class="insp-grid">
+      <div class="insp-stat"><div class="k">Significance</div><div class="v" style="color:var(--${ssigCol})">${s.ssig.toFixed(2)}</div></div>
+      <div class="insp-stat"><div class="k">Hazard</div><div class="v" style="text-transform:capitalize">${esc(s.hazard_level || 'none')}</div></div>
+      <div class="insp-stat"><div class="k">Objects</div><div class="v">${s.objects.length}</div></div>
+      <div class="insp-stat"><div class="k">Actions</div><div class="v">${s.actions.length}</div></div>
+    </div>
+    <div style="margin-bottom:14px">
+      ${s.objects.map(o => `<span class="chip">${esc(o.label)} · ${(o.confidence * 100).toFixed(0)}%</span>`).join('') || '<span class="sub" style="margin:0">No objects detected</span>'}
+      ${s.actions.map(a => `<span class="chip act">▷ ${esc(a.action)} · ${(a.confidence * 100).toFixed(0)}%</span>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn" onclick="playSeg('${s.id}')">▶ Playback</button>
+      <button class="btn sm" onclick="viewMeta('${s.id}')">Full metadata</button>
+      ${canManage ? `
+      <select class="btn sm" onchange="setTierInsp('${s.id}',this.value)"><option value="">tier…</option><option>HIGH</option><option>MEDIUM</option><option>LOW</option></select>
+      <button class="btn sm danger" onclick="delSegmentInsp('${s.id}')">Delete</button>` : ''}
+    </div>` : '<p class="sub" style="margin:0">No motion detected — auto-tiered LOW and skipped deep analysis.</p>'}`;
+}
+window.setTierInsp = async (id, tier) => {
+  if (!tier) return;
+  const fd = new FormData(); fd.append('tier', tier);
+  await api('/segments/' + id + '/tier', { method: 'POST', body: fd });
+  toast('Tier set to ' + tier);
+  if (_curProjectId) openProject(_curProjectId);
+};
+window.delSegmentInsp = async id => {
+  if (!confirm('Delete this segment and its files? This cannot be undone.')) return;
+  await api('/segments/' + id, { method: 'DELETE' });
+  toast('Segment deleted');
+  if (_curProjectId) openProject(_curProjectId);
 };
 
 // ---------- live animated pipeline tracker (driven by process logs) ----------

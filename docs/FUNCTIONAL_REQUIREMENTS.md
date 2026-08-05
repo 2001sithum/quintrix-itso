@@ -122,13 +122,24 @@ known gap, documented rather than silently left broken.
   driven live by the new per-stage/per-segment process logs over the existing
   SSE log stream, with a progress bar and streaming detail line. Replaces a
   2.5s dumb-polling refresh loop.
-- **Quality Timeline (FR32)** — a color-coded horizontal bar across the
-  project detail view showing every segment's tier (HIGH/MEDIUM/LOW) across
-  the video's real duration; clicking a segment scrolls to and highlights its
-  card in the list below.
+- **Interactive analysis timeline + inspector (FR32/38/39)** — the project
+  detail view's segment list was replaced with a scrubber: a single
+  horizontal bar spanning the video's real duration, each block sized by
+  segment length, colored by tier, with an inner bar showing that segment's
+  Ssig. Clicking a block selects it and populates an inspector panel
+  (thumbnail, threat/hazard, object/action chips, playback, tier override,
+  delete) without leaving the timeline — replaces scrolling a long vertical
+  list of segment cards.
 - **Full CRUD for users, projects, segments, and alerts** — see the CRUD
   section of `docs/API.md` (rename projects, edit/delete users with
-  last-admin guards, delete segments/alerts from the UI).
+  last-admin guards, delete segments/alerts from the inspector or search
+  results).
 - **In-app scoring documentation** (`Docs` nav item) — explains the 5-stage
   pipeline and the Ssig formula's weights/boosts using the config's live
   threshold values, not just static text.
+- **Visual redesign** — glassmorphism cards (backdrop blur + gradient
+  borders), an ambient grid/glow background, gradient brand/heading text,
+  consistent hover/focus states across every button and nav item, and
+  motion (fade-up on view change, pulsing live indicators) throughout
+  `static/app.css`. No new dependencies — pure CSS, keeping the project's
+  "no framework" design decision intact.
