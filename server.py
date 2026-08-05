@@ -55,7 +55,10 @@ async def log_requests(request: Request, call_next):
 # Auth helpers (FR04-07, 24)
 # ---------------------------------------------------------------------------
 def current_user(request: Request):
-    token = request.headers.get("x-session") or request.cookies.get("session")
+    # EventSource can't send custom headers, so the SSE log stream is
+    # reached with ?session=TOKEN instead — accepted only for that reason.
+    token = (request.headers.get("x-session") or request.cookies.get("session")
+             or request.query_params.get("session"))
     if not token:
         return None
     row = sm.q("SELECT u.* FROM sessions s JOIN users u ON u.id=s.user_id "
@@ -495,6 +498,7 @@ async def logs(request: Request, type: Optional[str] = None,
 
 @app.get("/api/logs/stream")                    # FR30 live log stream (SSE)
 async def log_stream(request: Request):
+    require(request)   # any authenticated role — used by the live pipeline tracker too
     import asyncio
     async def gen():
         last = sm.q("SELECT MAX(id) m FROM logs", one=True)["m"] or 0

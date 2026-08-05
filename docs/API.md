@@ -84,7 +84,7 @@ Config keys: `threshold_high`, `threshold_low`, `alert_threshold`,
 | Method | Path | Roles | Notes |
 |---|---|---|---|
 | GET | `/logs` | Administrator | `type, severity, limit` filters |
-| GET | `/logs/stream` | Administrator | Server-Sent Events, polls every 1s for ~10 minutes |
+| GET | `/logs/stream` | any | Server-Sent Events, polls every 1s for ~10 minutes. `EventSource` can't send custom headers, so auth is passed as `?session=TOKEN` instead of `x-session` here — the only endpoint that accepts a token this way. Powers both the Logs page's live stream and the Projects page's animated pipeline tracker. |
 
 ## Misc
 

@@ -24,20 +24,13 @@ known gap, documented rather than silently left broken.
 | 09 | Fixed 15s segmentation | live |
 | 10 | Invaligator motion filter | live |
 | 11 | YOLOv8 object detection | live |
-| 12 | X3D-S action recognition, top-5 | live, with a labeling gap — see below |
+| 12 | X3D-S action recognition, top-5 | live — see defect #5 below |
 | 13 | MobileNetV3 sentiment + threat head | live |
 | 28 | Technical metadata (duration/fps/resolution/codec) | live |
 | 33 | Thumbnails | live |
 | 40 | Three-model ensemble feeding one decision | live |
 | 55 | Frame downscaling for inference | reviewed |
 | 60 | Device auto-select (CUDA/MPS/CPU) | live — selected `mps` with zero config |
-
-**Limitation:** `models/kinetics_labels.json` maps only 44 of the 400
-Kinetics-400 classes (and contains one out-of-range index). Unmapped
-predictions render as a placeholder like `action_211` instead of a verb. Not
-patched with a guessed mapping — the correct fix is regenerating this file
-from an authoritative Kinetics-400 class list matching the `x3d_s` checkpoint's
-label order.
 
 ## Scoring & tiered storage — FR14–23, 58
 
@@ -54,8 +47,8 @@ label order.
 | FR | Requirement | Status |
 |---|---|---|
 | 26, 34–37 | Filterable, paginated forensic search | live (UI-verified) |
-| 32 | Segment timeline | live |
-| 38 | Playback | reviewed |
+| 32 | Segment timeline | live — animated Quality Timeline (color-coded by tier, click-to-jump) added to the project detail view |
+| 38 | Playback | **fixed** — see defect #4 below |
 | 39 | Metadata drill-down | live — see UI refinement note below |
 
 ## Analytics & ops — FR25, 31, 49, 52, 59
@@ -102,3 +95,40 @@ label order.
    block-level `<div>` fragmented under the default inline display, causing
    the text to overlap the page heading. Fixed with `display:block` on
    `.dropzone` (`static/app.css`).
+4. **Playback silently did nothing (FR38).** `playSeg()` called
+   `window.open()` *after* an `await fetch()` — by the time the fetch
+   resolved, the call was no longer inside the original click's user-gesture
+   window, so browsers silently blocked it as a popup. Fixed by playing the
+   video/keyframe inline in the existing metadata modal instead of a new
+   window — no popup blocker involved, and better UX (`static/app.js`).
+5. **Every action-recognition label was wrong, not just missing (FR12).**
+   `models/kinetics_labels.json` had 44 entries, and cross-checking against
+   the authoritative Kinetics-400 class list used by this exact `x3d_s`
+   checkpoint showed **all 44 were mismatched** — e.g. index 214 rendered as
+   "fighting" when the model's actual class 214 is "picking fruit". Looked
+   fabricated rather than sourced. Replaced with the complete, verified
+   400-class mapping from PyTorchVideo's own `kinetics_classnames.json`.
+6. **`/logs/stream` had no auth check at all** — not even a basic session
+   check, unlike every other endpoint. Found while wiring the live pipeline
+   tracker (below) into it. Fixed with `require(request)`; since
+   `EventSource` can't send the `x-session` header, the token is now also
+   accepted via `?session=` query param for this one endpoint
+   (`server.py`, `docs/API.md`).
+
+## Features added beyond the original spec
+
+- **Live animated pipeline tracker** — while a project is processing, the
+  detail view shows a 3-node stepper (Ingest → Analyze & Score → Complete)
+  driven live by the new per-stage/per-segment process logs over the existing
+  SSE log stream, with a progress bar and streaming detail line. Replaces a
+  2.5s dumb-polling refresh loop.
+- **Quality Timeline (FR32)** — a color-coded horizontal bar across the
+  project detail view showing every segment's tier (HIGH/MEDIUM/LOW) across
+  the video's real duration; clicking a segment scrolls to and highlights its
+  card in the list below.
+- **Full CRUD for users, projects, segments, and alerts** — see the CRUD
+  section of `docs/API.md` (rename projects, edit/delete users with
+  last-admin guards, delete segments/alerts from the UI).
+- **In-app scoring documentation** (`Docs` nav item) — explains the 5-stage
+  pipeline and the Ssig formula's weights/boosts using the config's live
+  threshold values, not just static text.

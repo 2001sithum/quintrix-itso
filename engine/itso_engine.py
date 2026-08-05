@@ -135,10 +135,16 @@ def process_project(project_id):
         sm.execute("UPDATE projects SET fps=?,duration=?,width=?,height=?,codec=? WHERE id=?",
                    (meta["fps"], meta["duration"], meta["width"], meta["height"],
                     meta["codec"], project_id))
+        sm.log("processing", f"Stage 1/5 Ingestion: {meta['duration']:.1f}s @ "
+               f"{meta['fps']:.0f}fps, {meta['width']}x{meta['height']}",
+               context={"project": project_id})
         fps, segs = segment_video(proj["original_path"], seg_s)          # FR09
+        sm.log("processing", f"Stage 1/5 Segmentation: cut into {len(segs)} "
+               f"segments of {seg_s}s", context={"project": project_id})
         base_ts = dt.datetime.fromisoformat(proj["created_at"])
         tier_dir = os.path.join(ARCHIVE, "tiers")
         total_o = total_s = 0
+        tier_counts = {"HIGH": 0, "MEDIUM": 0, "LOW": 0}
 
         for idx, seg_path, frames in segs:
             seg_id = uuid.uuid4().hex
@@ -181,6 +187,17 @@ def process_project(project_id):
                  threat, hazard, ssig, tier, stored_path, orig_bytes, stored_bytes,
                  json.dumps(metadata)))
             total_o += orig_bytes; total_s += stored_bytes
+            tier_counts[tier] += 1
+            if moved:
+                obj_summary = ', '.join(o['label'] for o in objects[:3]) or 'none'
+                sm.log("processing",
+                       f"Stage 2-5 Segment {idx + 1}/{len(segs)}: motion detected, "
+                       f"objects=[{obj_summary}], ssig={ssig:.2f}, tier={tier}",
+                       context={"project": project_id, "segment": seg_id})
+            else:
+                sm.log("processing",
+                       f"Stage 2 Segment {idx + 1}/{len(segs)}: no motion — "
+                       f"skipped, auto-tiered LOW", context={"project": project_id})
 
             # FR17 event extraction
             if moved and ssig >= th_high:
@@ -202,8 +219,12 @@ def process_project(project_id):
         sm.execute("UPDATE projects SET status='done',original_bytes=?,stored_bytes=? WHERE id=?",
                    (total_o, total_s, project_id))
         _generate_recommendations(project_id)                            # FR59
-        sm.log("processing", f"Pipeline complete for {project_id}",
-               context={"segments": len(segs)})
+        savings = round(100 * (1 - total_s / total_o), 1) if total_o else 0.0
+        sm.log("processing",
+               f"Stage 5/5 Complete: {len(segs)} segments — "
+               f"HIGH={tier_counts['HIGH']} MEDIUM={tier_counts['MEDIUM']} LOW={tier_counts['LOW']}, "
+               f"{savings}% storage saved",
+               context={"project": project_id, "segments": len(segs), "tiers": tier_counts})
     except Exception as e:
         sm.execute("UPDATE projects SET status='error' WHERE id=?", (project_id,))
         sm.log("error", f"Pipeline failed: {e}", severity="error",

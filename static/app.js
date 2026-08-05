@@ -72,6 +72,7 @@ const NAV = [
   { id: 'config', label: 'Configuration', roles: ['Administrator'] },
   { id: 'logs', label: 'Logs', roles: ['Administrator'] },
   { id: 'users', label: 'Users', roles: ['Administrator'] },
+  { id: 'docs', label: 'Docs', roles: ['Administrator', 'SecurityOperator', 'User'] },
 ];
 let current = 'dashboard';
 
@@ -217,20 +218,119 @@ window.delProject = async id => {
 window.openProject = async id => {
   const d = await api('/projects/' + id);
   const p = d.project;
+  const isProcessing = p.status === 'processing';
   $('#pdetail').innerHTML = `<div class="card" style="margin-top:14px">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px">
       <h3 style="margin:0">${esc(p.name || p.filename)}</h3>
       <span class="pill ${p.status}">${p.status}</span></div>
     <p class="sub">${esc(p.filename)} · <span style="font-family:var(--mono)">${p.id.slice(0, 12)}</span> · ${(p.duration || 0).toFixed(1)}s · ${p.width}×${p.height} · ${(p.fps || 0).toFixed(0)}fps</p>
-    ${d.segments.map(segCard).join('') || '<div class="empty">No segments.</div>'}
+    ${isProcessing ? pipelineTrackerHTML() : ''}
+    ${!isProcessing && d.segments.length ? segmentTimelineHTML(d.segments, p.duration) : ''}
+    ${d.segments.map(segCard).join('') || (isProcessing ? '' : '<div class="empty">No segments.</div>')}
   </div>`;
-  if (p.status === 'processing') setTimeout(() => openProject(id), 2500);
+  if (isProcessing) startPipelineTracker(id);
 };
+
+// ---------- segment quality timeline (FR32) ----------
+function segmentTimelineHTML(segments, duration) {
+  const total = duration || segments[segments.length - 1]?.end_time || 1;
+  return `<div class="card" style="margin:14px 0;background:var(--panel2)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <h3 style="margin:0;font-size:13px">Quality Timeline</h3>
+      <div style="display:flex;gap:14px;font-size:10px;color:var(--dim)">
+        <span><span class="pill HIGH">HIGH</span> lossless</span>
+        <span><span class="pill MEDIUM">MEDIUM</span> re-encoded</span>
+        <span><span class="pill LOW">LOW</span> keyframe / static</span>
+      </div>
+    </div>
+    <div class="timeline-track">${segments.map(s => {
+      const w = Math.max(0.5, (s.end_time - s.start_time) / total * 100).toFixed(2);
+      const col = s.tier === 'HIGH' ? 'hi' : s.tier === 'MEDIUM' ? 'warn' : s.motion ? 'ok' : 'dimmer';
+      return `<div class="tl-seg" style="width:${w}%;background:var(--${col})"
+        title="#${String(s.idx).padStart(3, '0')} · ${s.start_time.toFixed(0)}s–${s.end_time.toFixed(0)}s · ${s.tier || 'static'} · Ssig ${s.ssig.toFixed(2)}"
+        onclick="scrollToSegment('${s.id}')"></div>`;
+    }).join('')}</div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dimmer);margin-top:4px;font-family:var(--mono)">
+      <span>0s</span><span>${total.toFixed(0)}s</span>
+    </div>
+  </div>`;
+}
+window.scrollToSegment = id => {
+  const el = document.getElementById('seg-' + id);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.classList.remove('tl-highlight'); void el.offsetWidth; el.classList.add('tl-highlight');
+};
+
+// ---------- live animated pipeline tracker (driven by process logs) ----------
+function pipelineTrackerHTML() {
+  return `<div class="pipeline-tracker">
+      <div class="pt-step active" data-pt="ingest"><div class="pt-dot"></div><span>Ingest</span></div>
+      <div class="pt-line" data-pt-line="1"></div>
+      <div class="pt-step" data-pt="analyze"><div class="pt-dot"></div><span>Analyze &amp; Score</span></div>
+      <div class="pt-line" data-pt-line="2"></div>
+      <div class="pt-step" data-pt="done"><div class="pt-dot"></div><span>Complete</span></div>
+    </div>
+    <div class="bar" style="margin-bottom:6px"><i id="pt-bar" style="width:0%;background:var(--info)"></i></div>
+    <div class="pt-detail" id="pt-detail"><span class="spin">◐</span> Waiting for pipeline…</div>`;
+}
+function _ptStep(name, state) {
+  const el = $(`.pt-step[data-pt="${name}"]`);
+  if (!el) return;
+  el.classList.remove('active', 'done');
+  if (state) el.classList.add(state);
+}
+function _ptLine(n, filled) {
+  $(`.pt-line[data-pt-line="${n}"]`)?.classList.toggle('filled', filled);
+}
+function _ptApply(msg) {
+  const detail = $('#pt-detail');
+  if (msg.startsWith('Stage 1/5 Ingestion')) {
+    if (detail) detail.innerHTML = `<span class="spin">◐</span> ${esc(msg.replace('Stage 1/5 Ingestion: ', ''))}`;
+  } else if (msg.startsWith('Stage 1/5 Segmentation')) {
+    _ptStep('ingest', 'done'); _ptLine(1, true); _ptStep('analyze', 'active');
+    if (detail) detail.innerHTML = `<span class="spin">◐</span> ${esc(msg.replace('Stage 1/5 Segmentation: ', ''))}`;
+  } else if (/^Stage 2(-5)? Segment/.test(msg)) {
+    _ptStep('analyze', 'active');
+    const m = msg.match(/Segment (\d+)\/(\d+)/);
+    if (m) { const bar = $('#pt-bar'); if (bar) bar.style.width = (m[1] / m[2] * 100) + '%'; }
+    if (detail) detail.innerHTML = `<span class="spin">◐</span> ${esc(msg.replace(/^Stage [\d-]+ /, ''))}`;
+  } else if (msg.startsWith('Stage 5/5 Complete')) {
+    _ptStep('analyze', 'done'); _ptLine(2, true); _ptStep('done', 'done');
+    const bar = $('#pt-bar'); if (bar) bar.style.width = '100%';
+    if (detail) detail.innerHTML = `✓ ${esc(msg.replace('Stage 5/5 Complete: ', ''))}`;
+    return true; // signals completion
+  }
+  return false;
+}
+let _ptSource = null;
+async function startPipelineTracker(pid) {
+  if (_ptSource) { _ptSource.close(); _ptSource = null; }
+  // catch up on any stage messages that already happened before we connected
+  try {
+    const rows = await api('/logs?type=processing&limit=200');
+    rows.reverse().forEach(r => {
+      let ctx = {}; try { ctx = JSON.parse(r.context || '{}'); } catch { ctx = r.context || {}; }
+      if (ctx.project === pid) _ptApply(r.message);
+    });
+  } catch { /* non-admin role: no /logs access, live SSE still works */ }
+  const es = _ptSource = new EventSource('/api/logs/stream?session=' + encodeURIComponent(S.token));
+  es.onmessage = e => {
+    let r; try { r = JSON.parse(e.data); } catch { return; }
+    let ctx = {}; try { ctx = JSON.parse(r.context || '{}'); } catch { ctx = r.context || {}; }
+    if (ctx.project !== pid) return;
+    if (_ptApply(r.message)) {
+      es.close(); if (_ptSource === es) _ptSource = null;
+      setTimeout(() => openProject(pid), 900);
+    }
+  };
+  es.onerror = () => { es.close(); if (_ptSource === es) _ptSource = null; };
+}
 
 function segCard(s) {
   const col = s.threat_level === 'high' ? 'hi' : s.threat_level === 'medium' ? 'warn' : 'ok';
   const ssigCol = s.ssig >= 0.7 ? 'hi' : s.ssig >= 0.45 ? 'warn' : 'ok';
-  return `<div class="seg" style="border-left:3px solid var(--${col})">
+  return `<div class="seg" id="seg-${s.id}" style="border-left:3px solid var(--${col})">
     ${s.thumb ? `<img class="thumb" src="/api/thumb/${s.id}" onerror="this.style.opacity=.2">` : '<div class="thumb"></div>'}
     <div class="body">
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
@@ -259,12 +359,23 @@ function segCard(s) {
     </div></div>`;
 }
 
+let _blobUrl = null;
+function closeModal() {
+  $('#modal-backdrop').classList.add('hidden');
+  if (_blobUrl) { URL.revokeObjectURL(_blobUrl); _blobUrl = null; }
+}
 window.playSeg = async id => {
-  try { const r = await fetch('/api/playback/' + id, { headers: { 'x-session': S.token } });
+  try {
+    const r = await fetch('/api/playback/' + id, { headers: { 'x-session': S.token } });
     if (!r.ok) { toast('No playable media (keyframe-only tier)'); return; }
-    const url = URL.createObjectURL(await r.blob());
-    const w = window.open('', '_blank');
-    w.document.write(`<body style="margin:0;background:#000"><video src="${url}" controls autoplay style="width:100%"></video></body>`);
+    const blob = await r.blob();
+    if (_blobUrl) URL.revokeObjectURL(_blobUrl);
+    _blobUrl = URL.createObjectURL(blob);
+    $('#modal-title').textContent = 'Segment Playback';
+    $('#modal-body').innerHTML = blob.type.startsWith('image/')
+      ? `<img src="${_blobUrl}" style="width:100%;border-radius:8px;display:block">`
+      : `<video src="${_blobUrl}" controls autoplay style="width:100%;border-radius:8px;background:#000;display:block"></video>`;
+    $('#modal-backdrop').classList.remove('hidden');
   } catch { toast('Playback unavailable'); }
 };
 window.viewMeta = async id => {
@@ -282,9 +393,9 @@ window.viewMeta = async id => {
   </dl>`;
   $('#modal-backdrop').classList.remove('hidden');
 };
-$('#modal-close').onclick = () => $('#modal-backdrop').classList.add('hidden');
-$('#modal-backdrop').onclick = e => { if (e.target.id === 'modal-backdrop') e.target.classList.add('hidden'); };
-document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#modal-backdrop').classList.add('hidden'); });
+$('#modal-close').onclick = closeModal;
+$('#modal-backdrop').onclick = e => { if (e.target.id === 'modal-backdrop') closeModal(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 window.delSegment = async (id, btn) => {
   if (!confirm('Delete this segment and its files? This cannot be undone.')) return;
   await api('/segments/' + id, { method: 'DELETE' });
@@ -395,7 +506,7 @@ VIEWS.logs = async () => {
   let es = null;
   $('#l-live').onclick = () => {
     if (es) { es.close(); es = null; $('#l-live').textContent = '▶ Live stream'; return; }
-    es = new EventSource('/api/logs/stream');
+    es = new EventSource('/api/logs/stream?session=' + encodeURIComponent(S.token));
     $('#l-live').textContent = '■ Stop stream';
     es.onmessage = e => { const r = JSON.parse(e.data);
       $('#loglist').insertAdjacentHTML('afterbegin', logLine(r)); };
@@ -460,6 +571,79 @@ window.deleteUser = async id => {
   try { await api('/admin/users/' + id, { method: 'DELETE' }); toast('User deleted'); }
   catch (e) { toast(e.message); }
   loadUsers();
+};
+
+VIEWS.docs = async () => {
+  V.innerHTML = `<h2>Analytics &amp; Scoring Documentation</h2>
+    <p class="sub">How Quintrix turns raw footage into a significance score and a storage decision.</p>
+    <div id="docs-body"></div>`;
+  let cfg = {};
+  try { cfg = await api('/config'); } catch { /* non-admin: show defaults below */ }
+  const th_high = cfg.threshold_high ?? '0.7', th_low = cfg.threshold_low ?? '0.4',
+        alert_th = cfg.alert_threshold ?? '0.8', sens = cfg.motion_sensitivity ?? '0.001';
+  $('#docs-body').innerHTML = `
+    <div class="card" style="margin-bottom:14px">
+      <h3 style="margin:0 0 10px;font-size:14px">The 5-stage pipeline</h3>
+      <p class="sub" style="margin:0 0 12px">Every upload runs through these stages automatically, in order.</p>
+      <div class="row" style="gap:10px">
+        ${[
+          ['1', 'Ingestion', 'Read metadata, cut into fixed-length segments'],
+          ['2', 'Invaligator', 'MOG2 motion filter — static segments skip straight to LOW tier'],
+          ['3', 'Deep analysis', 'YOLOv8 objects + X3D-S actions + MobileNetV3 sentiment/threat'],
+          ['4', 'Prioritization', 'Combine everything into one Ssig significance score'],
+          ['5', 'Tiered storage', 'Write the segment out according to its tier'],
+        ].map(([n, t, d]) => `<div class="card" style="flex:1;min-width:160px;background:var(--panel2)">
+            <div class="pill LOW" style="margin-bottom:8px">STAGE ${n}</div>
+            <b style="font-size:13px">${t}</b>
+            <p style="margin:6px 0 0;font-size:12px;color:var(--dim)">${d}</p>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-bottom:14px">
+      <div class="card">
+        <h3 style="margin:0 0 10px;font-size:14px">Significance score (Ssig)</h3>
+        <p class="sub" style="margin:0 0 10px">A single 0–1 score per segment, weighted from three model outputs plus context modifiers:</p>
+        <dl style="display:grid;grid-template-columns:1fr auto;gap:6px 12px;margin:0 0 12px;font-size:12px">
+          <dt style="color:var(--dim)">Objects detected (YOLOv8)</dt><dd style="margin:0;font-family:var(--mono)">35%</dd>
+          <dt style="color:var(--dim)">Top action confidence (X3D-S)</dt><dd style="margin:0;font-family:var(--mono)">30%</dd>
+          <dt style="color:var(--dim)">Sentiment/threat (MobileNetV3)</dt><dd style="margin:0;font-family:var(--mono)">35%</dd>
+        </dl>
+        <p class="sub" style="margin:0 0 6px">Boosted further by context rules:</p>
+        <div>
+          <span class="chip">weapon detected +0.25</span>
+          <span class="chip">3+ people (crowd) +0.15</span>
+          <span class="chip">night footage +0.10</span>
+          <span class="chip">critical hazard +0.25</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 10px;font-size:14px">Live thresholds</h3>
+        <p class="sub" style="margin:0 0 10px">From Configuration — tune these to change tiering/alerting sensitivity.</p>
+        <div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span class="pill HIGH">HIGH</span><span>Ssig &gt; ${th_high}</span></div></div>
+        <div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span class="pill MEDIUM">MEDIUM</span><span>${th_low} &lt; Ssig ≤ ${th_high}</span></div></div>
+        <div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+          <span class="pill LOW">LOW</span><span>Ssig ≤ ${th_low}, or no motion</span></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;padding-top:8px;border-top:1px solid var(--line)">
+          <span style="color:var(--dim)">Alert threshold</span><span>Ssig ≥ ${alert_th}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:6px">
+          <span style="color:var(--dim)">Motion sensitivity</span><span>${sens}</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 10px;font-size:14px">What each storage tier actually keeps</h3>
+      <div class="grid2" style="gap:10px">
+        <div class="card" style="background:var(--panel2)"><span class="pill HIGH">HIGH</span>
+          <p style="margin:8px 0 0;font-size:12px;color:var(--dim)">Original clip kept lossless — full forensic detail, largest storage cost.</p></div>
+        <div class="card" style="background:var(--panel2)"><span class="pill MEDIUM">MEDIUM</span>
+          <p style="margin:8px 0 0;font-size:12px;color:var(--dim)">Re-encoded at a lower bitrate — playable, meaningfully smaller.</p></div>
+        <div class="card" style="background:var(--panel2)"><span class="pill LOW">LOW</span>
+          <p style="margin:8px 0 0;font-size:12px;color:var(--dim)">Single JPEG keyframe only — no video, minimal footprint.</p></div>
+      </div>
+    </div>`;
 };
 
 // ---------- alert badge polling (FR42) ----------

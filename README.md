@@ -108,10 +108,6 @@ full FR-by-FR coverage table — see [Documentation](#documentation) above.
 
 ## Known issues
 
-- **Action labels incomplete.** `models/kinetics_labels.json` maps 44 of 400
-  Kinetics-400 classes; unmapped predictions show as `action_N` instead of a
-  name. Needs the full label list regenerated from an authoritative source
-  matching the `x3d_s` checkpoint's class order.
 - **`/thumb` and `/playback` have no auth check** — fine for local/demo use,
   add one before exposing this beyond localhost.
 - **Session tokens don't expire.** Fine for a prototype; add TTL/refresh
