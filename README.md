@@ -24,6 +24,7 @@ forensic search, alerting, analytics, configuration, and full audit logging.
 - [docs/API.md](docs/API.md) — every REST endpoint, roles, and parameters
 - [docs/FUNCTIONAL_REQUIREMENTS.md](docs/FUNCTIONAL_REQUIREMENTS.md) — FR-by-FR verification status
 - [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — Docker and GCP deployment options
+- [docs/CI_CD.md](docs/CI_CD.md) — GitHub Actions pipeline: build/test on every PR, auto-redeploy to GCP on push to main
 - [docs/FR_SPECIFICATION.md](docs/FR_SPECIFICATION.md) — the original university project brief (all 60 FRs as specified)
 
 ## Run it

@@ -1,0 +1,63 @@
+name: CI/CD
+
+# Additive pipeline — does not change how the app runs. `test` always runs
+# (PRs + pushes) and never touches infrastructure. `deploy` only runs after
+# `test` passes, only on pushes to main, and only redeploys the existing GCP
+# Compute Engine VM described in docs/DEPLOYMENT.md Option B (git pull +
+# `docker compose up -d --build` on the VM itself) — no new resources are
+# created automatically. See docs/CI_CD.md for the one-time GCP setup and
+# required repo secrets.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    name: Build & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies (CPU torch, matches Dockerfile)
+        run: |
+          pip install --no-cache-dir torch==2.5.1 torchvision==0.20.1 \
+            --index-url https://download.pytorch.org/whl/cpu
+          pip install --no-cache-dir -r requirements.txt
+
+      - name: Python syntax check (server, engine, models)
+        run: python -m compileall -q server.py itso_system.py engine models
+
+      - name: Validate docker-compose config
+        run: docker compose config > /dev/null
+
+      - name: Build Docker image (build-only, not pushed anywhere)
+        run: docker build -t quintrix-itso:ci .
+
+  deploy:
+    name: Deploy to GCP (existing Compute Engine VM)
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Redeploy on the VM (git pull + rebuild container in place)
+        run: |
+          gcloud compute ssh "${{ secrets.GCP_VM_NAME }}" \
+            --zone="${{ secrets.GCP_VM_ZONE }}" \
+            --project="${{ secrets.GCP_PROJECT_ID }}" \
+            --command="cd quintrix-itso && git fetch origin main && git reset --hard origin/main && docker compose up -d --build"
