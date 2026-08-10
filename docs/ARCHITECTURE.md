@@ -73,6 +73,24 @@ Segments at or above `alert_threshold` also write a row to `events` and
 `alerts`, which is how the Alerts view and the nav bar's alert dot get their
 data — there is no separate "check for alerts" job.
 
+## Alternative action-recognition backend (opt-in)
+
+`models/action_recognizer_r3d18.py` adds a second action/anomaly-recognition
+model — a torchvision `r3d_18` (ResNet3D-18) fine-tuned with a 14-class head
+matching the UCF-Crime class set (13 anomaly classes + Normal) — as a
+drop-in alternative to the default X3D-S backend. It is purely additive:
+
+- Selected via the `action_model_backend` config key (`x3d` default, `r3d18`
+  opt-in), editable from the Configuration view or `POST /api/config`.
+- Dispatched by `engine/itso_engine.py::recognize_actions()`, which falls
+  back to X3D-S automatically if the r3d18 backend is selected but
+  `r3d18_best.pt` isn't present — a bad/missing config value can't break the
+  pipeline.
+- Same output shape as the X3D backend (top-5 `{action, confidence}`), so no
+  downstream code (Ssig scoring, storage, UI) needed to change.
+- Weights load from `r3d18_best.pt` at the project root by default,
+  overridable with the `R3D18_WEIGHTS` env var.
+
 ## Data layer
 
 `engine/storage_manager.py` owns every table and is the only module that

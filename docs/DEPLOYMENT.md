@@ -93,6 +93,49 @@ That's a real backend rewrite, not a deployment config change — worth doing
 only if you need autoscaling/pay-per-request. Otherwise Option A is
 substantially less work and behaves identically to running it locally.
 
+### Optional — R3D-18 alternative action-recognition backend
+
+`r3d18_best.pt` (a ResNet3D-18 fine-tuned on UCF-Crime's 14-class set) ships
+as an **opt-in alternative** to the default X3D-S backend — see
+[ARCHITECTURE.md](ARCHITECTURE.md#alternative-action-recognition-backend-opt-in).
+It's toggled by config (`action_model_backend=r3d18`), not a code change, so
+it runs inside the same container as everything else — no separate service
+or deployment is required, and the default (`x3d`) path and resource
+footprint are unaffected unless an admin flips the toggle.
+
+If you do enable it, size for the heavier model rather than deploying it
+separately:
+
+- **CPU-only (cheapest, matches the default Option B sizing philosophy):**
+  R3D-18 at 112×112/16-frame clips runs on CPU but is slower per segment
+  than X3D-S. Bump the Compute Engine machine type from `e2-standard-4` to
+  `e2-standard-8` (8 vCPU / 32GB) if you expect sustained upload volume with
+  the alt backend enabled; `e2-standard-4` is still fine for occasional/manual
+  use.
+- **GPU (optimum for throughput, not required):** attach a T4 accelerator
+  instead of scaling vCPUs — cheaper per unit of throughput than large CPU
+  instances for this workload size:
+  ```bash
+  gcloud compute instances create quintrix-itso-gpu \
+    --project=YOUR_PROJECT_ID \
+    --zone=us-central1-a \
+    --machine-type=n1-standard-4 \
+    --accelerator=type=nvidia-tesla-t4,count=1 \
+    --maintenance-policy=TERMINATE \
+    --image-family=debian-12 --image-project=debian-cloud \
+    --boot-disk-size=50GB \
+    --tags=http-server
+  ```
+  Requires the NVIDIA driver + `nvidia-docker`/`--gpus all` on the container
+  run step; `torch`/`torchvision` in `requirements.txt` already support CUDA,
+  no rebuild needed. `select_device()` (FR60) picks up CUDA automatically —
+  this only affects the object/sentiment/action models' device, not the app
+  logic.
+- **Don't co-locate with Cloud Run (Option C):** R3D-18's load time and
+  per-request latency make it a poor fit for Cloud Run's cold-start/scale-to-zero
+  model; keep this backend on Option A/B (persistent VM) regardless of which
+  option you use for the default X3D-S path.
+
 ### Either way
 
 - Build the container once and push it: `gcloud builds submit --tag

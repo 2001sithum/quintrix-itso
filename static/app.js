@@ -528,7 +528,14 @@ VIEWS.config = async () => {
       ${cfgField('object_conf_threshold', 'Object detection confidence', c)}
       ${cfgField('action_min_frames', 'Action recognition min frames', c)}
       ${cfgField('segment_seconds', 'Segment duration (s)', c)}
+      <div class="field"><label>Action recognition model</label>
+        <select data-cfg="action_model_backend">
+          <option value="x3d" ${c.action_model_backend !== 'r3d18' ? 'selected' : ''}>X3D-S (default)</option>
+          <option value="r3d18" ${c.action_model_backend === 'r3d18' ? 'selected' : ''}>R3D-18 — UCF-Crime alt (experimental)</option>
+        </select>
+      </div>
     </div>
+    <p class="sub" style="margin-top:8px">R3D-18 is an alternative anomaly-recognition backend (14-class UCF-Crime head) run in place of X3D-S. It falls back to X3D-S automatically if its weights file isn't present.</p>
     <div style="margin-top:14px"><button class="primary" id="cfg-save">Save configuration</button></div></div>`;
   $('#cfg-save').onclick = async () => {
     const body = {};

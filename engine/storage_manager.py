@@ -134,6 +134,9 @@ DEFAULT_CONFIG = {
     "object_conf_threshold": "0.35",
     "action_min_frames": "16",
     "segment_seconds": "15",
+    # Alternative action-recognition backend toggle: "x3d" (default, unchanged
+    # pipeline behavior) or "r3d18" (opt-in ResNet3D-18 / UCF-Crime backend).
+    "action_model_backend": "x3d",
     "context_rules": json.dumps({
         "night_boost": 0.1, "weapon_boost": 0.25, "crowd_boost": 0.15
     }),

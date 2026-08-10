@@ -94,6 +94,7 @@ quintrix-itso/
 ├── models/
 │   ├── object_detector.py    # YOLOv8 (FR11)
 │   ├── action_recognizer.py  # X3D-S (FR12)
+│   ├── action_recognizer_r3d18.py  # R3D-18 / UCF-Crime, opt-in alternative to X3D-S
 │   ├── sentiment_analyzer.py # MobileNetV3 + threat head (FR13)
 │   ├── tier_segmenters.py    # FFmpeg/cv2 tier processors (FR18-22)
 │   └── kinetics_labels.json

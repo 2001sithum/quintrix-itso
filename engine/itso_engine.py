@@ -10,6 +10,7 @@ import numpy as np
 
 from engine import storage_manager as sm
 from models import object_detector, action_recognizer, sentiment_analyzer, tier_segmenters
+from models import action_recognizer_r3d18  # opt-in alternative backend (FR12 alt)
 
 ARCHIVE = sm.ARCHIVE_DIR
 
@@ -118,6 +119,20 @@ def assign_tier(ssig, th_high, th_low):
 
 
 # ---------------------------------------------------------------------------
+# FR12 alt — action recognition backend dispatch (X3D-S default, R3D-18 opt-in)
+# ---------------------------------------------------------------------------
+def recognize_actions(frames, min_frames, backend="x3d"):
+    """Selects the action-recognition backend per config. Defaults to the
+    original X3D-S path (action_recognizer.py) so existing behavior is
+    unchanged unless an operator explicitly opts into "r3d18". Falls back to
+    X3D-S if the r3d18 checkpoint isn't present, so a bad/missing config
+    value never breaks the pipeline (per the failure-isolation design)."""
+    if backend == "r3d18" and action_recognizer_r3d18.available():
+        return action_recognizer_r3d18.recognize(frames, min_frames)
+    return action_recognizer.recognize(frames, min_frames)
+
+
+# ---------------------------------------------------------------------------
 # Full per-project pipeline (async worker calls this) — FR29 background
 # ---------------------------------------------------------------------------
 def process_project(project_id):
@@ -126,6 +141,7 @@ def process_project(project_id):
     alert_th = float(cfg["alert_threshold"]); sens = float(cfg["motion_sensitivity"])
     conf = float(cfg["object_conf_threshold"]); min_f = int(cfg["action_min_frames"])
     seg_s = int(cfg["segment_seconds"]); ctx = json.loads(cfg["context_rules"])
+    action_backend = cfg.get("action_model_backend", "x3d")
 
     proj = sm.q("SELECT * FROM projects WHERE id=?", (project_id,), one=True)
     sm.execute("UPDATE projects SET status='processing' WHERE id=?", (project_id,))
@@ -159,7 +175,7 @@ def process_project(project_id):
 
             if moved:
                 objects = object_detector.detect(frames, conf)          # FR11
-                actions = action_recognizer.recognize(frames, min_f)    # FR12
+                actions = recognize_actions(frames, min_f, action_backend)  # FR12 (+ alt)
                 sc, lab, threat = sentiment_analyzer.analyze(frames, objects)  # FR13
                 hazard = assess_hazard(objects, threat)                  # FR23
                 ssig = compute_ssig(objects, actions, sc, hazard, ctx)   # FR14/15
