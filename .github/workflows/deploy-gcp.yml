@@ -1,0 +1,338 @@
+# ---------------------------------------------------------------------------
+# Build → push to Artifact Registry → deploy to GCP.
+#
+# Replaces the old in-place "ssh in and git pull && docker compose build" step.
+# The image is now built once, here, and the VM pulls it: deploys are
+# reproducible, the VM needs no source checkout or build toolchain, and every
+# deploy is addressable by commit SHA so a rollback is a redeploy of an older
+# tag rather than a revert commit.
+#
+# One-time GCP setup and the full secret/variable list: docs/CI_CD.md
+# ---------------------------------------------------------------------------
+name: Deploy to GCP
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Where to deploy after pushing the image
+        type: choice
+        default: vm
+        options: [vm, cloudrun, image-only]
+      image_tag:
+        description: Existing tag to deploy instead of building (for rollback)
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+  id-token: write        # required for keyless Workload Identity Federation
+
+env:
+  IMAGE_NAME: quintrix-itso
+  # Repo-level variables, not secrets — none of these are sensitive.
+  GCP_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+  GCP_REGION: ${{ vars.GCP_REGION || 'europe-west1' }}
+  AR_REPO: ${{ vars.GCP_AR_REPO || 'quintrix' }}
+
+jobs:
+  # -------------------------------------------------------------------------
+  # Gate: never ship an image that fails the suite.
+  # -------------------------------------------------------------------------
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Install dependencies
+        run: |
+          pip install --no-cache-dir torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cpu
+          pip install --no-cache-dir -r requirements.txt pytest httpx
+      - name: Unit and integration tests
+        run: python -m pytest tests/ -q --tb=short
+
+  # -------------------------------------------------------------------------
+  # Build and push. The image is tagged with the commit SHA (immutable, what
+  # deploys reference) and `latest` (convenience only — never deployed by tag).
+  # -------------------------------------------------------------------------
+  build-push:
+    name: Build & push image
+    needs: test
+    if: inputs.image_tag == ''
+    runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.meta.outputs.image }}
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail fast on missing configuration
+        run: |
+          : "${GCP_PROJECT:?set the GCP_PROJECT_ID repository variable}"
+          echo "project=$GCP_PROJECT region=$GCP_REGION repo=$AR_REPO"
+
+      # --- auth: prefer keyless WIF, fall back to a JSON key if that is all
+      # that is configured. A long-lived key in a repo secret is a standing
+      # credential; WIF mints a short-lived token per run instead.
+      - name: Authenticate (Workload Identity Federation)
+        id: auth_wif
+        if: vars.GCP_WIF_PROVIDER != ''
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - name: Authenticate (service-account key)
+        if: vars.GCP_WIF_PROVIDER == ''
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+
+      # --- weights are gitignored (~170MB), so a checkout has none of them.
+      # A container built without them starts and serves happily but detects
+      # nothing: R3D-18 and the Track 1 threat detector both degrade to empty
+      # results. That is silent and dangerous, so the build refuses to proceed.
+      - name: Fetch model weights from GCS
+        env:
+          WEIGHTS_URI: ${{ vars.GCP_WEIGHTS_URI }}
+        run: |
+          if [ -z "$WEIGHTS_URI" ]; then
+            echo "::error title=Model weights not configured::Set the GCP_WEIGHTS_URI repository variable and upload weights with scripts/upload-weights.sh. Building without them produces a container that detects nothing."
+            exit 1
+          fi
+          mkdir -p weights
+          gsutil -m cp "$WEIGHTS_URI/*" weights/ || true
+          missing=0
+          for f in r3d18_ucfcrime.pt yolov8s_suspicious.pt sentiment_mlp.pt; do
+            if [ ! -s "weights/$f" ]; then
+              echo "::error title=Missing weight::weights/$f was not found at $WEIGHTS_URI"
+              missing=1
+            else
+              echo "ok  weights/$f  $(du -h weights/$f | cut -f1)"
+            fi
+          done
+          [ "$missing" -eq 0 ]
+
+      - name: Compute image tags
+        id: meta
+        run: |
+          BASE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${AR_REPO}/${IMAGE_NAME}"
+          echo "base=$BASE"            >> "$GITHUB_OUTPUT"
+          echo "image=$BASE:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.base }}:${{ github.sha }}
+            ${{ steps.meta.outputs.base }}:latest
+          # Layer cache in the registry itself, so a deploy that only changes
+          # application code does not re-download ~2GB of torch wheels.
+          cache-from: type=registry,ref=${{ steps.meta.outputs.base }}:buildcache
+          cache-to: type=registry,ref=${{ steps.meta.outputs.base }}:buildcache,mode=max
+          provenance: false
+
+      - name: Summary
+        run: |
+          {
+            echo "### Image pushed"
+            echo ""
+            echo '```'
+            echo "${{ steps.meta.outputs.image }}"
+            echo "digest: ${{ steps.push.outputs.digest }}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # -------------------------------------------------------------------------
+  # Deploy to a Compute Engine VM. This is the default because the app is
+  # stateful: SQLite in WAL mode plus the whole archive (uploads, tier
+  # artefacts, footage held in the Tier-3 review queue) live on a persistent
+  # disk. See the cloudrun job below for why that matters.
+  # -------------------------------------------------------------------------
+  deploy-vm:
+    name: Deploy to Compute Engine
+    # Both are declared so their results are readable here. build-push is
+    # *skipped* on a rollback (image_tag supplied), which must still deploy —
+    # hence the explicit skipped check rather than a plain success gate.
+    needs: [test, build-push]
+    if: >
+      always()
+      && needs.test.result == 'success'
+      && (needs.build-push.result == 'success' || needs.build-push.result == 'skipped')
+      && (github.event_name == 'push' || inputs.target == 'vm')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate (Workload Identity Federation)
+        if: vars.GCP_WIF_PROVIDER != ''
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - name: Authenticate (service-account key)
+        if: vars.GCP_WIF_PROVIDER == ''
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Resolve image
+        id: img
+        run: |
+          BASE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${AR_REPO}/${IMAGE_NAME}"
+          TAG="${{ inputs.image_tag }}"
+          [ -n "$TAG" ] || TAG="${GITHUB_SHA}"
+          echo "image=$BASE:$TAG" >> "$GITHUB_OUTPUT"
+          echo "Deploying $BASE:$TAG"
+
+      - name: Copy compose file to the VM
+        run: |
+          gcloud compute scp docker-compose.deploy.yml \
+            "${{ secrets.GCP_VM_NAME }}:~/docker-compose.deploy.yml" \
+            --zone="${{ secrets.GCP_VM_ZONE }}" --project="$GCP_PROJECT" --quiet
+
+      - name: Pull and restart
+        run: |
+          gcloud compute ssh "${{ secrets.GCP_VM_NAME }}" \
+            --zone="${{ secrets.GCP_VM_ZONE }}" --project="$GCP_PROJECT" --quiet \
+            --command="set -euo pipefail
+              gcloud auth configure-docker ${GCP_REGION}-docker.pkg.dev --quiet
+              export ITSO_IMAGE='${{ steps.img.outputs.image }}'
+              export ITSO_PORT='${{ vars.ITSO_PORT || 8000 }}'
+              docker pull \"\$ITSO_IMAGE\"
+              docker compose -f ~/docker-compose.deploy.yml up -d --remove-orphans
+              docker image prune -f --filter 'until=168h'"
+
+      - name: Wait for health
+        run: |
+          HOST="${{ vars.GCP_APP_URL }}"
+          if [ -z "$HOST" ]; then
+            echo "GCP_APP_URL not set — skipping the external health check."
+            echo "The container healthcheck still gates the restart."
+            exit 0
+          fi
+          for i in $(seq 1 40); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 8 "$HOST/api/health" || true)
+            if [ "$code" = "200" ]; then
+              echo "healthy after ${i} attempt(s)"
+              curl -s "$HOST/api/health"; echo
+              exit 0
+            fi
+            echo "attempt $i: HTTP ${code:-none}"
+            sleep 15
+          done
+          echo "::error title=Deploy unhealthy::$HOST/api/health never returned 200"
+          exit 1
+
+  # -------------------------------------------------------------------------
+  # Cloud Run — opt-in only, and deliberately not the default.
+  #
+  # This app keeps a SQLite database in WAL mode and writes video to a local
+  # archive. Cloud Run's filesystem is per-instance and ephemeral, so without a
+  # mounted volume every upload, tier artefact and held-for-review recording is
+  # lost on the next revision or scale-to-zero. Even with a GCS volume mount,
+  # SQLite WAL over FUSE is not safe for concurrent writers, which is why this
+  # pins max-instances=1.
+  #
+  # Use it for demos and review environments. For anything holding real
+  # footage, deploy to the VM (or GKE with a PersistentVolume) instead.
+  # -------------------------------------------------------------------------
+  deploy-cloudrun:
+    name: Deploy to Cloud Run (ephemeral)
+    needs: [test, build-push]
+    if: >
+      always()
+      && inputs.target == 'cloudrun'
+      && needs.test.result == 'success'
+      && (needs.build-push.result == 'success' || needs.build-push.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Authenticate (Workload Identity Federation)
+        if: vars.GCP_WIF_PROVIDER != ''
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - name: Authenticate (service-account key)
+        if: vars.GCP_WIF_PROVIDER == ''
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy revision
+        id: run
+        run: |
+          BASE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${AR_REPO}/${IMAGE_NAME}"
+          TAG="${{ inputs.image_tag }}"; [ -n "$TAG" ] || TAG="${GITHUB_SHA}"
+          BUCKET="${{ vars.GCP_STATE_BUCKET }}"
+
+          ARGS=(
+            --image="$BASE:$TAG"
+            --region="$GCP_REGION"
+            --project="$GCP_PROJECT"
+            --platform=managed
+            --port=8000
+            --cpu=4 --memory=8Gi
+            # The pipeline runs on background threads; without always-allocated
+            # CPU those threads are throttled the moment a request returns and
+            # a job can stall indefinitely.
+            --no-cpu-throttling
+            --timeout=3600
+            # SQLite WAL tolerates exactly one writer here.
+            --max-instances=1 --concurrency=40
+            --set-env-vars=QUINTRIX_DB=/data/quintrix_itso.db,QUINTRIX_ARCHIVE=/data/archive
+          )
+          if [ -n "$BUCKET" ]; then
+            ARGS+=(
+              --add-volume="name=state,type=cloud-storage,bucket=$BUCKET"
+              --add-volume-mount="volume=state,mount-path=/data"
+            )
+          else
+            echo "::warning title=No persistent volume::GCP_STATE_BUCKET is unset. /data is ephemeral — every upload, tier artefact and held recording is lost when this revision is replaced."
+          fi
+          gcloud run deploy "${IMAGE_NAME}" "${ARGS[@]}"
+          URL=$(gcloud run services describe "${IMAGE_NAME}" --region="$GCP_REGION" \
+                 --project="$GCP_PROJECT" --format='value(status.url)')
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test
+        run: |
+          URL="${{ steps.run.outputs.url }}"
+          for i in $(seq 1 20); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$URL/api/health" || true)
+            [ "$code" = "200" ] && { echo "healthy: $URL"; curl -s "$URL/api/health"; echo; exit 0; }
+            echo "attempt $i: HTTP ${code:-none}"; sleep 10
+          done
+          echo "::error title=Cloud Run unhealthy::$URL/api/health never returned 200"; exit 1
+
+      - name: Summary
+        run: echo "Deployed to ${{ steps.run.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"

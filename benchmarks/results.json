@@ -1,0 +1,65 @@
+{
+  "started_at": "2026-09-11T11:07:22",
+  "platform": {
+    "target": "cross-platform: Linux, macOS, Windows",
+    "os": "Darwin",
+    "release": "25.4.0",
+    "machine": "arm64",
+    "python": "3.12.1",
+    "torch": "2.5.1",
+    "device_selected": "mps",
+    "ffmpeg": true,
+    "ci": false,
+    "note": "One host produces one row. The Linux and Windows rows come from the CI matrix, which runs this same module on ubuntu-latest and windows-latest and uploads its results."
+  },
+  "availability": {
+    "target": "99.5% availability",
+    "window_seconds": 30.0,
+    "concurrent_workers": 16,
+    "requests": 15576,
+    "succeeded": 15576,
+    "failed": 0,
+    "availability_percent": 100.0,
+    "meets_target": true,
+    "throughput_rps": 518.9,
+    "latency_ms": {
+      "p50": 26.44,
+      "p90": 57.18,
+      "p99": 92.13,
+      "max": 166.0
+    },
+    "errors": {},
+    "note": "Measured against the in-process ASGI app under concurrent read load. This exercises application availability, not infrastructure availability \u2014 network, host and restart behaviour are out of scope for this experiment."
+  },
+  "concurrency": {
+    "target": "100 concurrent projects",
+    "requested": 100,
+    "accepted": 100,
+    "completed": 100,
+    "errored": 0,
+    "stuck_in_processing": 0,
+    "segments_produced": 100,
+    "worker_pool_size": 4,
+    "peak_queue_depth": 96,
+    "submit_seconds": 0.29,
+    "total_seconds": 551.4,
+    "throughput_projects_per_min": 10.9,
+    "submit_errors": {},
+    "meets_target": true,
+    "note": "Uploads are accepted immediately and queued onto a bounded worker pool. Clips are deliberately small so the experiment measures scheduling and completion under simultaneous load rather than single-inference latency. The pass condition is that no accepted work is lost: every upload must reach done or error, never remain stuck."
+  },
+  "platform_matrix": [
+    {
+      "target": "cross-platform: Linux, macOS, Windows",
+      "os": "Darwin",
+      "release": "25.4.0",
+      "machine": "arm64",
+      "python": "3.12.1",
+      "torch": "2.5.1",
+      "device_selected": "mps",
+      "ffmpeg": true,
+      "ci": false,
+      "note": "One host produces one row. The Linux and Windows rows come from the CI matrix, which runs this same module on ubuntu-latest and windows-latest and uploads its results."
+    }
+  ]
+}

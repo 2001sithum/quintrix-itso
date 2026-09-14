@@ -19,3 +19,16 @@ venv/
 # editor / os
 .vscode/
 *.log
+
+# local agent/editor tooling — contains absolute home paths and host IPs
+.claude/
+.idea/
+
+# stray binaries that are not source
+*.jpe
+*.jpeg
+
+
+# vendored Colab drop — contains unredacted Drive paths; the sanitised
+# copy lives at docs/reference_cctv_pipeline_colab.py
+new\[pipelne}/

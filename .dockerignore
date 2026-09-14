@@ -1,5 +1,41 @@
+# Build context hygiene. Without this the context is ~3.2GB (a 1GB virtualenv,
+# 1.7GB of processed archive, and duplicate checkpoints), all of which would be
+# uploaded to the builder and copied into the image by `COPY . .`.
+
+# local environment / caches
+.venv
+venv
 __pycache__
 *.pyc
-*.db*
-archive
+.pytest_cache
+.DS_Store
+
+# runtime state — belongs on the persistent volume, never in the image
+*.db
+*.db-wal
+*.db-shm
+archive/
+benchmarks/results.json
+
+# vcs and tooling
 .git
+.github
+.claude
+tests/
+scripts/
+
+# The original Colab drop — its weights are vendored under weights/ instead.
+# Written as a glob, not the literal name: the directory is called
+# `new[pipelne}` and an unmatched `[` opens a character class in Docker's
+# pattern matcher, which fails the whole build with "syntax error in pattern".
+# Nothing else in the repo starts with "new".
+new*
+
+# superseded / duplicate checkpoints at the repo root. weights/ is the single
+# source of truth; keeping these too would add ~145MB of dead payload.
+r3d18_best.pt
+action_recognition_x3d.pt
+yolov8n.pt
+
+# docs and generated figures are not needed at runtime
+docs/

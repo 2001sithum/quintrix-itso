@@ -1,0 +1,27 @@
+# Cloud Build source upload.
+#
+# IMPORTANT: without this file gcloud falls back to .gitignore, which excludes
+# weights/*.pt — and a build without those produces a container that starts,
+# serves, passes its health check, and detects nothing. This file exists
+# specifically so the weights ARE uploaded.
+
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.DS_Store
+
+*.db
+*.db-wal
+*.db-shm
+archive/
+
+# glob rather than the literal name — see .dockerignore for why
+new*
+r3d18_best.pt
+action_recognition_x3d.pt
+yolov8n.pt
+docs/assets/

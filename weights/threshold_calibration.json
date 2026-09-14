@@ -1,0 +1,2820 @@
+{
+  "samples": 6000,
+  "seed": 4242,
+  "distributions": [
+    "nominal",
+    "low_light",
+    "busy_scene",
+    "weak_models"
+  ],
+  "max_critical_miss": 0.02,
+  "budget_satisfied": true,
+  "current": {
+    "threshold_low": 0.4,
+    "threshold_high": 0.7,
+    "worst_critical_miss": 0.0643,
+    "worst_over_retention": 0.0,
+    "mean_storage_index": 0.269,
+    "per_shift": {
+      "nominal": {
+        "critical_miss_rate": 0.0028,
+        "storage_index": 0.2895,
+        "high_pct": 22.93,
+        "low_pct": 45.68
+      },
+      "low_light": {
+        "critical_miss_rate": 0.0,
+        "storage_index": 0.2761,
+        "high_pct": 20.93,
+        "low_pct": 43.95
+      },
+      "busy_scene": {
+        "critical_miss_rate": 0.0,
+        "storage_index": 0.3306,
+        "high_pct": 25.47,
+        "low_pct": 33.83
+      },
+      "weak_models": {
+        "critical_miss_rate": 0.0643,
+        "storage_index": 0.1796,
+        "high_pct": 13.4,
+        "low_pct": 64.12
+      }
+    }
+  },
+  "recommended": {
+    "threshold_low": 0.3,
+    "threshold_high": 0.9,
+    "worst_critical_miss": 0.0127,
+    "worst_over_retention": 0.0,
+    "mean_storage_index": 0.2265,
+    "per_shift": {
+      "nominal": {
+        "critical_miss_rate": 0.0,
+        "storage_index": 0.2612,
+        "high_pct": 17.47,
+        "low_pct": 36.07
+      },
+      "low_light": {
+        "critical_miss_rate": 0.0,
+        "storage_index": 0.2137,
+        "high_pct": 10.53,
+        "low_pct": 30.65
+      },
+      "busy_scene": {
+        "critical_miss_rate": 0.0,
+        "storage_index": 0.3089,
+        "high_pct": 19.03,
+        "low_pct": 15.78
+      },
+      "weak_models": {
+        "critical_miss_rate": 0.0127,
+        "storage_index": 0.1221,
+        "high_pct": 2.95,
+        "low_pct": 47.72
+      }
+    }
+  },
+  "grid": [
+    {
+      "threshold_low": 0.2,
+      "threshold_high": 0.4,
+      "worst_critical_miss": 0.0007,
+      "worst_over_retention": 0.1459,
+      "mean_storage_index": 0.5839,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5888,
+          "high_pct": 54.32,
+          "low_pct": 21.28
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.6096,
+          "high_pct": 56.05,
+          "low_pct": 17.45
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.7126,
+          "high_pct": 66.17,
+          "low_pct": 5.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0007,
+          "storage_index": 0.4248,
+          "high_pct": 35.88,
+          "low_pct": 28.75
+        }
+      }
+    },
+    {
+      "threshold_low": 0.2,
+      "threshold_high": 0.45,
+      "worst_critical_miss": 0.0007,
+      "worst_over_retention": 0.071,
+      "mean_storage_index": 0.5256,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5313,
+          "high_pct": 47.3,
+          "low_pct": 21.28
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5504,
+          "high_pct": 48.83,
+          "low_pct": 17.45
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.6498,
+          "high_pct": 58.5,
+          "low_pct": 5.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0007,
+          "storage_index": 0.3709,
+          "high_pct": 29.32,
+          "low_pct": 28.75
+        }
+      }
+    },
+    {
+      "threshold_low": 0.2,
+      "threshold_high": 0.5,
+      "worst_critical_miss": 0.0007,
+      "worst_over_retention": 0.0301,
+      "mean_storage_index": 0.4632,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4782,
+          "high_pct": 40.83,
+          "low_pct": 21.28
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.464,
+          "high_pct": 38.3,
+          "low_pct": 17.45
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5829,
+          "high_pct": 50.35,
+          "low_pct": 5.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0007,
+          "storage_index": 0.3276,
+          "high_pct": 24.03,
+          "low_pct": 28.75
+        }
+      }
+    },
+    {
+      "threshold_low": 0.2,
+      "threshold_high": 0.55,
+      "worst_critical_miss": 0.0007,
+      "worst_over_retention": 0.0134,
+      "mean_storage_index": 0.4094,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4178,
+          "high_pct": 33.47,
+          "low_pct": 21.28
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4004,
+          "high_pct": 30.53,
+          "low_pct": 17.45
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5149,
+          "high_pct": 42.05,
+          "low_pct": 5.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0007,
+          "storage_index": 0.3045,
+          "high_pct": 21.22,
+          "low_pct": 28.75
+        }
+      }
+    },
+    {
+      "threshold_low": 0.2,
+      "threshold_high": 0.6,
+      "worst_critical_miss": 0.0007,
+      "worst_over_retention": 0.0038,
+      "mean_storage_index": 0.3706,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3711,
+          "high_pct": 27.77,
+          "low_pct": 21.28
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3656,
+          "high_pct": 26.3,
+          "low_pct": 17.45
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4587,
+          "high_pct": 35.2,
+          "low_pct": 5.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0007,
+          "storage_index": 0.287,
+          "high_pct": 19.08,
+          "low_pct": 28.75
+        }
+      }
+    },
+    {
+      "threshold_low": 0.2,
+      "threshold_high": 0.65,
+      "worst_critical_miss": 0.0007,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.3402,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3466,
+          "high_pct": 24.78,
+          "low_pct": 21.28
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3393,
+          "high_pct": 23.08,
+          "low_pct": 17.45
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4077,
+          "high_pct": 28.98,
+          "low_pct": 5.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0007,
+          "storage_index": 0.2674,
+          "high_pct": 16.68,
+          "low_pct": 28.75
+        }
+      }
+    },
+    {
+      "threshold_low": 0.2,
+      "threshold_high": 0.7,
+      "worst_critical_miss": 0.0007,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.3181,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3314,
+          "high_pct": 22.93,
+          "low_pct": 21.28
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3216,
+          "high_pct": 20.93,
+          "low_pct": 17.45
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3789,
+          "high_pct": 25.47,
+          "low_pct": 5.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0007,
+          "storage_index": 0.2404,
+          "high_pct": 13.4,
+          "low_pct": 28.75
+        }
+      }
+    },
+    {
+      "threshold_low": 0.2,
+      "threshold_high": 0.75,
+      "worst_critical_miss": 0.0007,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.3024,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3223,
+          "high_pct": 21.82,
+          "low_pct": 21.28
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3097,
+          "high_pct": 19.48,
+          "low_pct": 17.45
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3612,
+          "high_pct": 23.32,
+          "low_pct": 5.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0007,
+          "storage_index": 0.2165,
+          "high_pct": 10.48,
+          "low_pct": 28.75
+        }
+      }
+    },
+    {
+      "threshold_low": 0.2,
+      "threshold_high": 0.8,
+      "worst_critical_miss": 0.0007,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2864,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.313,
+          "high_pct": 20.68,
+          "low_pct": 21.28
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2895,
+          "high_pct": 17.02,
+          "low_pct": 17.45
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3509,
+          "high_pct": 22.05,
+          "low_pct": 5.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0007,
+          "storage_index": 0.1923,
+          "high_pct": 7.53,
+          "low_pct": 28.75
+        }
+      }
+    },
+    {
+      "threshold_low": 0.2,
+      "threshold_high": 0.85,
+      "worst_critical_miss": 0.0007,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.27,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3025,
+          "high_pct": 19.4,
+          "low_pct": 21.28
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2653,
+          "high_pct": 14.07,
+          "low_pct": 17.45
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3405,
+          "high_pct": 20.78,
+          "low_pct": 5.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0007,
+          "storage_index": 0.1715,
+          "high_pct": 5.0,
+          "low_pct": 28.75
+        }
+      }
+    },
+    {
+      "threshold_low": 0.2,
+      "threshold_high": 0.9,
+      "worst_critical_miss": 0.0007,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.251,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2866,
+          "high_pct": 17.47,
+          "low_pct": 21.28
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2364,
+          "high_pct": 10.53,
+          "low_pct": 17.45
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3261,
+          "high_pct": 19.03,
+          "low_pct": 5.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0007,
+          "storage_index": 0.1547,
+          "high_pct": 2.95,
+          "low_pct": 28.75
+        }
+      }
+    },
+    {
+      "threshold_low": 0.25,
+      "threshold_high": 0.4,
+      "worst_critical_miss": 0.0049,
+      "worst_over_retention": 0.1459,
+      "mean_storage_index": 0.5707,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5799,
+          "high_pct": 54.32,
+          "low_pct": 26.47
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5942,
+          "high_pct": 56.05,
+          "low_pct": 26.4
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.7036,
+          "high_pct": 66.17,
+          "low_pct": 11.02
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0049,
+          "storage_index": 0.4051,
+          "high_pct": 35.88,
+          "low_pct": 40.2
+        }
+      }
+    },
+    {
+      "threshold_low": 0.25,
+      "threshold_high": 0.45,
+      "worst_critical_miss": 0.0049,
+      "worst_over_retention": 0.071,
+      "mean_storage_index": 0.5124,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5223,
+          "high_pct": 47.3,
+          "low_pct": 26.47
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.535,
+          "high_pct": 48.83,
+          "low_pct": 26.4
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.6408,
+          "high_pct": 58.5,
+          "low_pct": 11.02
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0049,
+          "storage_index": 0.3513,
+          "high_pct": 29.32,
+          "low_pct": 40.2
+        }
+      }
+    },
+    {
+      "threshold_low": 0.25,
+      "threshold_high": 0.5,
+      "worst_critical_miss": 0.0049,
+      "worst_over_retention": 0.0301,
+      "mean_storage_index": 0.4499,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4693,
+          "high_pct": 40.83,
+          "low_pct": 26.47
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4487,
+          "high_pct": 38.3,
+          "low_pct": 26.4
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5739,
+          "high_pct": 50.35,
+          "low_pct": 11.02
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0049,
+          "storage_index": 0.3079,
+          "high_pct": 24.03,
+          "low_pct": 40.2
+        }
+      }
+    },
+    {
+      "threshold_low": 0.25,
+      "threshold_high": 0.55,
+      "worst_critical_miss": 0.0049,
+      "worst_over_retention": 0.0134,
+      "mean_storage_index": 0.3962,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4089,
+          "high_pct": 33.47,
+          "low_pct": 26.47
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.385,
+          "high_pct": 30.53,
+          "low_pct": 26.4
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5059,
+          "high_pct": 42.05,
+          "low_pct": 11.02
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0049,
+          "storage_index": 0.2848,
+          "high_pct": 21.22,
+          "low_pct": 40.2
+        }
+      }
+    },
+    {
+      "threshold_low": 0.25,
+      "threshold_high": 0.6,
+      "worst_critical_miss": 0.0049,
+      "worst_over_retention": 0.0038,
+      "mean_storage_index": 0.3574,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3622,
+          "high_pct": 27.77,
+          "low_pct": 26.47
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3503,
+          "high_pct": 26.3,
+          "low_pct": 26.4
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4497,
+          "high_pct": 35.2,
+          "low_pct": 11.02
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0049,
+          "storage_index": 0.2673,
+          "high_pct": 19.08,
+          "low_pct": 40.2
+        }
+      }
+    },
+    {
+      "threshold_low": 0.25,
+      "threshold_high": 0.65,
+      "worst_critical_miss": 0.0049,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.327,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3377,
+          "high_pct": 24.78,
+          "low_pct": 26.47
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3239,
+          "high_pct": 23.08,
+          "low_pct": 26.4
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3987,
+          "high_pct": 28.98,
+          "low_pct": 11.02
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0049,
+          "storage_index": 0.2477,
+          "high_pct": 16.68,
+          "low_pct": 40.2
+        }
+      }
+    },
+    {
+      "threshold_low": 0.25,
+      "threshold_high": 0.7,
+      "worst_critical_miss": 0.0049,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.3048,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3225,
+          "high_pct": 22.93,
+          "low_pct": 26.47
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3062,
+          "high_pct": 20.93,
+          "low_pct": 26.4
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3699,
+          "high_pct": 25.47,
+          "low_pct": 11.02
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0049,
+          "storage_index": 0.2207,
+          "high_pct": 13.4,
+          "low_pct": 40.2
+        }
+      }
+    },
+    {
+      "threshold_low": 0.25,
+      "threshold_high": 0.75,
+      "worst_critical_miss": 0.0049,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2892,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3134,
+          "high_pct": 21.82,
+          "low_pct": 26.47
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2944,
+          "high_pct": 19.48,
+          "low_pct": 26.4
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3522,
+          "high_pct": 23.32,
+          "low_pct": 11.02
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0049,
+          "storage_index": 0.1968,
+          "high_pct": 10.48,
+          "low_pct": 40.2
+        }
+      }
+    },
+    {
+      "threshold_low": 0.25,
+      "threshold_high": 0.8,
+      "worst_critical_miss": 0.0049,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2732,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3041,
+          "high_pct": 20.68,
+          "low_pct": 26.47
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2741,
+          "high_pct": 17.02,
+          "low_pct": 26.4
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3419,
+          "high_pct": 22.05,
+          "low_pct": 11.02
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0049,
+          "storage_index": 0.1726,
+          "high_pct": 7.53,
+          "low_pct": 40.2
+        }
+      }
+    },
+    {
+      "threshold_low": 0.25,
+      "threshold_high": 0.85,
+      "worst_critical_miss": 0.0049,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2567,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2936,
+          "high_pct": 19.4,
+          "low_pct": 26.47
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2499,
+          "high_pct": 14.07,
+          "low_pct": 26.4
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3315,
+          "high_pct": 20.78,
+          "low_pct": 11.02
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0049,
+          "storage_index": 0.1519,
+          "high_pct": 5.0,
+          "low_pct": 40.2
+        }
+      }
+    },
+    {
+      "threshold_low": 0.25,
+      "threshold_high": 0.9,
+      "worst_critical_miss": 0.0049,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2377,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2777,
+          "high_pct": 17.47,
+          "low_pct": 26.47
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.221,
+          "high_pct": 10.53,
+          "low_pct": 26.4
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3171,
+          "high_pct": 19.03,
+          "low_pct": 11.02
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0049,
+          "storage_index": 0.135,
+          "high_pct": 2.95,
+          "low_pct": 40.2
+        }
+      }
+    },
+    {
+      "threshold_low": 0.3,
+      "threshold_high": 0.4,
+      "worst_critical_miss": 0.0127,
+      "worst_over_retention": 0.1459,
+      "mean_storage_index": 0.5595,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5634,
+          "high_pct": 54.32,
+          "low_pct": 36.07
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5869,
+          "high_pct": 56.05,
+          "low_pct": 30.65
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.6954,
+          "high_pct": 66.17,
+          "low_pct": 15.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.3922,
+          "high_pct": 35.88,
+          "low_pct": 47.72
+        }
+      }
+    },
+    {
+      "threshold_low": 0.3,
+      "threshold_high": 0.45,
+      "worst_critical_miss": 0.0127,
+      "worst_over_retention": 0.071,
+      "mean_storage_index": 0.5011,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5058,
+          "high_pct": 47.3,
+          "low_pct": 36.07
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5277,
+          "high_pct": 48.83,
+          "low_pct": 30.65
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.6326,
+          "high_pct": 58.5,
+          "low_pct": 15.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.3383,
+          "high_pct": 29.32,
+          "low_pct": 47.72
+        }
+      }
+    },
+    {
+      "threshold_low": 0.3,
+      "threshold_high": 0.5,
+      "worst_critical_miss": 0.0127,
+      "worst_over_retention": 0.0301,
+      "mean_storage_index": 0.4387,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4528,
+          "high_pct": 40.83,
+          "low_pct": 36.07
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4413,
+          "high_pct": 38.3,
+          "low_pct": 30.65
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5657,
+          "high_pct": 50.35,
+          "low_pct": 15.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.295,
+          "high_pct": 24.03,
+          "low_pct": 47.72
+        }
+      }
+    },
+    {
+      "threshold_low": 0.3,
+      "threshold_high": 0.55,
+      "worst_critical_miss": 0.0127,
+      "worst_over_retention": 0.0134,
+      "mean_storage_index": 0.3849,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3924,
+          "high_pct": 33.47,
+          "low_pct": 36.07
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3777,
+          "high_pct": 30.53,
+          "low_pct": 30.65
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4977,
+          "high_pct": 42.05,
+          "low_pct": 15.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.2719,
+          "high_pct": 21.22,
+          "low_pct": 47.72
+        }
+      }
+    },
+    {
+      "threshold_low": 0.3,
+      "threshold_high": 0.6,
+      "worst_critical_miss": 0.0127,
+      "worst_over_retention": 0.0038,
+      "mean_storage_index": 0.3461,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3457,
+          "high_pct": 27.77,
+          "low_pct": 36.07
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3429,
+          "high_pct": 26.3,
+          "low_pct": 30.65
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4415,
+          "high_pct": 35.2,
+          "low_pct": 15.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.2544,
+          "high_pct": 19.08,
+          "low_pct": 47.72
+        }
+      }
+    },
+    {
+      "threshold_low": 0.3,
+      "threshold_high": 0.65,
+      "worst_critical_miss": 0.0127,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.3157,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3212,
+          "high_pct": 24.78,
+          "low_pct": 36.07
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3166,
+          "high_pct": 23.08,
+          "low_pct": 30.65
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3905,
+          "high_pct": 28.98,
+          "low_pct": 15.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.2347,
+          "high_pct": 16.68,
+          "low_pct": 47.72
+        }
+      }
+    },
+    {
+      "threshold_low": 0.3,
+      "threshold_high": 0.7,
+      "worst_critical_miss": 0.0127,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2936,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.306,
+          "high_pct": 22.93,
+          "low_pct": 36.07
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2989,
+          "high_pct": 20.93,
+          "low_pct": 30.65
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3617,
+          "high_pct": 25.47,
+          "low_pct": 15.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.2078,
+          "high_pct": 13.4,
+          "low_pct": 47.72
+        }
+      }
+    },
+    {
+      "threshold_low": 0.3,
+      "threshold_high": 0.75,
+      "worst_critical_miss": 0.0127,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2779,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2969,
+          "high_pct": 21.82,
+          "low_pct": 36.07
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.287,
+          "high_pct": 19.48,
+          "low_pct": 30.65
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.344,
+          "high_pct": 23.32,
+          "low_pct": 15.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.1839,
+          "high_pct": 10.48,
+          "low_pct": 47.72
+        }
+      }
+    },
+    {
+      "threshold_low": 0.3,
+      "threshold_high": 0.8,
+      "worst_critical_miss": 0.0127,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.262,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2876,
+          "high_pct": 20.68,
+          "low_pct": 36.07
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2668,
+          "high_pct": 17.02,
+          "low_pct": 30.65
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3337,
+          "high_pct": 22.05,
+          "low_pct": 15.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.1597,
+          "high_pct": 7.53,
+          "low_pct": 47.72
+        }
+      }
+    },
+    {
+      "threshold_low": 0.3,
+      "threshold_high": 0.85,
+      "worst_critical_miss": 0.0127,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2455,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.277,
+          "high_pct": 19.4,
+          "low_pct": 36.07
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2426,
+          "high_pct": 14.07,
+          "low_pct": 30.65
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3233,
+          "high_pct": 20.78,
+          "low_pct": 15.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.1389,
+          "high_pct": 5.0,
+          "low_pct": 47.72
+        }
+      }
+    },
+    {
+      "threshold_low": 0.3,
+      "threshold_high": 0.9,
+      "worst_critical_miss": 0.0127,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2265,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2612,
+          "high_pct": 17.47,
+          "low_pct": 36.07
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2137,
+          "high_pct": 10.53,
+          "low_pct": 30.65
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3089,
+          "high_pct": 19.03,
+          "low_pct": 15.78
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.1221,
+          "high_pct": 2.95,
+          "low_pct": 47.72
+        }
+      }
+    },
+    {
+      "threshold_low": 0.35,
+      "threshold_high": 0.4,
+      "worst_critical_miss": 0.0325,
+      "worst_over_retention": 0.1459,
+      "mean_storage_index": 0.5482,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5543,
+          "high_pct": 54.32,
+          "low_pct": 41.32
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.578,
+          "high_pct": 56.05,
+          "low_pct": 35.8
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.6806,
+          "high_pct": 66.17,
+          "low_pct": 24.42
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0325,
+          "storage_index": 0.3797,
+          "high_pct": 35.88,
+          "low_pct": 54.95
+        }
+      }
+    },
+    {
+      "threshold_low": 0.35,
+      "threshold_high": 0.45,
+      "worst_critical_miss": 0.0325,
+      "worst_over_retention": 0.071,
+      "mean_storage_index": 0.4898,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4968,
+          "high_pct": 47.3,
+          "low_pct": 41.32
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5189,
+          "high_pct": 48.83,
+          "low_pct": 35.8
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.6177,
+          "high_pct": 58.5,
+          "low_pct": 24.42
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0325,
+          "storage_index": 0.3259,
+          "high_pct": 29.32,
+          "low_pct": 54.95
+        }
+      }
+    },
+    {
+      "threshold_low": 0.35,
+      "threshold_high": 0.5,
+      "worst_critical_miss": 0.0325,
+      "worst_over_retention": 0.0301,
+      "mean_storage_index": 0.4274,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4438,
+          "high_pct": 40.83,
+          "low_pct": 41.32
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4325,
+          "high_pct": 38.3,
+          "low_pct": 35.8
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5509,
+          "high_pct": 50.35,
+          "low_pct": 24.42
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0325,
+          "storage_index": 0.2826,
+          "high_pct": 24.03,
+          "low_pct": 54.95
+        }
+      }
+    },
+    {
+      "threshold_low": 0.35,
+      "threshold_high": 0.55,
+      "worst_critical_miss": 0.0325,
+      "worst_over_retention": 0.0134,
+      "mean_storage_index": 0.3736,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3834,
+          "high_pct": 33.47,
+          "low_pct": 41.32
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3688,
+          "high_pct": 30.53,
+          "low_pct": 35.8
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4828,
+          "high_pct": 42.05,
+          "low_pct": 24.42
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0325,
+          "storage_index": 0.2595,
+          "high_pct": 21.22,
+          "low_pct": 54.95
+        }
+      }
+    },
+    {
+      "threshold_low": 0.35,
+      "threshold_high": 0.6,
+      "worst_critical_miss": 0.0325,
+      "worst_over_retention": 0.0038,
+      "mean_storage_index": 0.3348,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3366,
+          "high_pct": 27.77,
+          "low_pct": 41.32
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3341,
+          "high_pct": 26.3,
+          "low_pct": 35.8
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4266,
+          "high_pct": 35.2,
+          "low_pct": 24.42
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0325,
+          "storage_index": 0.242,
+          "high_pct": 19.08,
+          "low_pct": 54.95
+        }
+      }
+    },
+    {
+      "threshold_low": 0.35,
+      "threshold_high": 0.65,
+      "worst_critical_miss": 0.0325,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.3045,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3122,
+          "high_pct": 24.78,
+          "low_pct": 41.32
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3077,
+          "high_pct": 23.08,
+          "low_pct": 35.8
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3757,
+          "high_pct": 28.98,
+          "low_pct": 24.42
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0325,
+          "storage_index": 0.2223,
+          "high_pct": 16.68,
+          "low_pct": 54.95
+        }
+      }
+    },
+    {
+      "threshold_low": 0.35,
+      "threshold_high": 0.7,
+      "worst_critical_miss": 0.0325,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2823,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.297,
+          "high_pct": 22.93,
+          "low_pct": 41.32
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2901,
+          "high_pct": 20.93,
+          "low_pct": 35.8
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3468,
+          "high_pct": 25.47,
+          "low_pct": 24.42
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0325,
+          "storage_index": 0.1954,
+          "high_pct": 13.4,
+          "low_pct": 54.95
+        }
+      }
+    },
+    {
+      "threshold_low": 0.35,
+      "threshold_high": 0.75,
+      "worst_critical_miss": 0.0325,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2666,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2878,
+          "high_pct": 21.82,
+          "low_pct": 41.32
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2782,
+          "high_pct": 19.48,
+          "low_pct": 35.8
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3292,
+          "high_pct": 23.32,
+          "low_pct": 24.42
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0325,
+          "storage_index": 0.1714,
+          "high_pct": 10.48,
+          "low_pct": 54.95
+        }
+      }
+    },
+    {
+      "threshold_low": 0.35,
+      "threshold_high": 0.8,
+      "worst_critical_miss": 0.0325,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2506,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2785,
+          "high_pct": 20.68,
+          "low_pct": 41.32
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.258,
+          "high_pct": 17.02,
+          "low_pct": 35.8
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3188,
+          "high_pct": 22.05,
+          "low_pct": 24.42
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0325,
+          "storage_index": 0.1473,
+          "high_pct": 7.53,
+          "low_pct": 54.95
+        }
+      }
+    },
+    {
+      "threshold_low": 0.35,
+      "threshold_high": 0.85,
+      "worst_critical_miss": 0.0325,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2342,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.268,
+          "high_pct": 19.4,
+          "low_pct": 41.32
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2338,
+          "high_pct": 14.07,
+          "low_pct": 35.8
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3084,
+          "high_pct": 20.78,
+          "low_pct": 24.42
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0325,
+          "storage_index": 0.1265,
+          "high_pct": 5.0,
+          "low_pct": 54.95
+        }
+      }
+    },
+    {
+      "threshold_low": 0.35,
+      "threshold_high": 0.9,
+      "worst_critical_miss": 0.0325,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2152,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2522,
+          "high_pct": 17.47,
+          "low_pct": 41.32
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2048,
+          "high_pct": 10.53,
+          "low_pct": 35.8
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2941,
+          "high_pct": 19.03,
+          "low_pct": 24.42
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0325,
+          "storage_index": 0.1097,
+          "high_pct": 2.95,
+          "low_pct": 54.95
+        }
+      }
+    },
+    {
+      "threshold_low": 0.4,
+      "threshold_high": 0.5,
+      "worst_critical_miss": 0.0643,
+      "worst_over_retention": 0.0301,
+      "mean_storage_index": 0.4141,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.4363,
+          "high_pct": 40.83,
+          "low_pct": 45.68
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4185,
+          "high_pct": 38.3,
+          "low_pct": 43.95
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.5347,
+          "high_pct": 50.35,
+          "low_pct": 33.83
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0643,
+          "storage_index": 0.2668,
+          "high_pct": 24.03,
+          "low_pct": 64.12
+        }
+      }
+    },
+    {
+      "threshold_low": 0.4,
+      "threshold_high": 0.55,
+      "worst_critical_miss": 0.0643,
+      "worst_over_retention": 0.0134,
+      "mean_storage_index": 0.3603,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.3759,
+          "high_pct": 33.47,
+          "low_pct": 45.68
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3548,
+          "high_pct": 30.53,
+          "low_pct": 43.95
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4666,
+          "high_pct": 42.05,
+          "low_pct": 33.83
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0643,
+          "storage_index": 0.2437,
+          "high_pct": 21.22,
+          "low_pct": 64.12
+        }
+      }
+    },
+    {
+      "threshold_low": 0.4,
+      "threshold_high": 0.6,
+      "worst_critical_miss": 0.0643,
+      "worst_over_retention": 0.0038,
+      "mean_storage_index": 0.3215,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.3291,
+          "high_pct": 27.77,
+          "low_pct": 45.68
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3201,
+          "high_pct": 26.3,
+          "low_pct": 43.95
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.4104,
+          "high_pct": 35.2,
+          "low_pct": 33.83
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0643,
+          "storage_index": 0.2262,
+          "high_pct": 19.08,
+          "low_pct": 64.12
+        }
+      }
+    },
+    {
+      "threshold_low": 0.4,
+      "threshold_high": 0.65,
+      "worst_critical_miss": 0.0643,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2911,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.3046,
+          "high_pct": 24.78,
+          "low_pct": 45.68
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2937,
+          "high_pct": 23.08,
+          "low_pct": 43.95
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3595,
+          "high_pct": 28.98,
+          "low_pct": 33.83
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0643,
+          "storage_index": 0.2065,
+          "high_pct": 16.68,
+          "low_pct": 64.12
+        }
+      }
+    },
+    {
+      "threshold_low": 0.4,
+      "threshold_high": 0.7,
+      "worst_critical_miss": 0.0643,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.269,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.2895,
+          "high_pct": 22.93,
+          "low_pct": 45.68
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2761,
+          "high_pct": 20.93,
+          "low_pct": 43.95
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3306,
+          "high_pct": 25.47,
+          "low_pct": 33.83
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0643,
+          "storage_index": 0.1796,
+          "high_pct": 13.4,
+          "low_pct": 64.12
+        }
+      }
+    },
+    {
+      "threshold_low": 0.4,
+      "threshold_high": 0.75,
+      "worst_critical_miss": 0.0643,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2533,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.2803,
+          "high_pct": 21.82,
+          "low_pct": 45.68
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2642,
+          "high_pct": 19.48,
+          "low_pct": 43.95
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.313,
+          "high_pct": 23.32,
+          "low_pct": 33.83
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0643,
+          "storage_index": 0.1557,
+          "high_pct": 10.48,
+          "low_pct": 64.12
+        }
+      }
+    },
+    {
+      "threshold_low": 0.4,
+      "threshold_high": 0.8,
+      "worst_critical_miss": 0.0643,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2373,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.271,
+          "high_pct": 20.68,
+          "low_pct": 45.68
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2439,
+          "high_pct": 17.02,
+          "low_pct": 43.95
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.3026,
+          "high_pct": 22.05,
+          "low_pct": 33.83
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0643,
+          "storage_index": 0.1315,
+          "high_pct": 7.53,
+          "low_pct": 64.12
+        }
+      }
+    },
+    {
+      "threshold_low": 0.4,
+      "threshold_high": 0.85,
+      "worst_critical_miss": 0.0643,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2208,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.2605,
+          "high_pct": 19.4,
+          "low_pct": 45.68
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2198,
+          "high_pct": 14.07,
+          "low_pct": 43.95
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2922,
+          "high_pct": 20.78,
+          "low_pct": 33.83
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0643,
+          "storage_index": 0.1107,
+          "high_pct": 5.0,
+          "low_pct": 64.12
+        }
+      }
+    },
+    {
+      "threshold_low": 0.4,
+      "threshold_high": 0.9,
+      "worst_critical_miss": 0.0643,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2018,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.2447,
+          "high_pct": 17.47,
+          "low_pct": 45.68
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.1908,
+          "high_pct": 10.53,
+          "low_pct": 43.95
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0,
+          "storage_index": 0.2779,
+          "high_pct": 19.03,
+          "low_pct": 33.83
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.0643,
+          "storage_index": 0.0939,
+          "high_pct": 2.95,
+          "low_pct": 64.12
+        }
+      }
+    },
+    {
+      "threshold_low": 0.45,
+      "threshold_high": 0.55,
+      "worst_critical_miss": 0.1074,
+      "worst_over_retention": 0.0134,
+      "mean_storage_index": 0.348,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.3638,
+          "high_pct": 33.47,
+          "low_pct": 52.7
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0021,
+          "storage_index": 0.3424,
+          "high_pct": 30.53,
+          "low_pct": 51.17
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.4534,
+          "high_pct": 42.05,
+          "low_pct": 41.5
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1074,
+          "storage_index": 0.2324,
+          "high_pct": 21.22,
+          "low_pct": 70.68
+        }
+      }
+    },
+    {
+      "threshold_low": 0.45,
+      "threshold_high": 0.6,
+      "worst_critical_miss": 0.1074,
+      "worst_over_retention": 0.0038,
+      "mean_storage_index": 0.3092,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.317,
+          "high_pct": 27.77,
+          "low_pct": 52.7
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0021,
+          "storage_index": 0.3077,
+          "high_pct": 26.3,
+          "low_pct": 51.17
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.3973,
+          "high_pct": 35.2,
+          "low_pct": 41.5
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1074,
+          "storage_index": 0.2149,
+          "high_pct": 19.08,
+          "low_pct": 70.68
+        }
+      }
+    },
+    {
+      "threshold_low": 0.45,
+      "threshold_high": 0.65,
+      "worst_critical_miss": 0.1074,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2789,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.2926,
+          "high_pct": 24.78,
+          "low_pct": 52.7
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0021,
+          "storage_index": 0.2813,
+          "high_pct": 23.08,
+          "low_pct": 51.17
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.3463,
+          "high_pct": 28.98,
+          "low_pct": 41.5
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1074,
+          "storage_index": 0.1952,
+          "high_pct": 16.68,
+          "low_pct": 70.68
+        }
+      }
+    },
+    {
+      "threshold_low": 0.45,
+      "threshold_high": 0.7,
+      "worst_critical_miss": 0.1074,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2567,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.2774,
+          "high_pct": 22.93,
+          "low_pct": 52.7
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0021,
+          "storage_index": 0.2636,
+          "high_pct": 20.93,
+          "low_pct": 51.17
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.3174,
+          "high_pct": 25.47,
+          "low_pct": 41.5
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1074,
+          "storage_index": 0.1683,
+          "high_pct": 13.4,
+          "low_pct": 70.68
+        }
+      }
+    },
+    {
+      "threshold_low": 0.45,
+      "threshold_high": 0.75,
+      "worst_critical_miss": 0.1074,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2411,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.2683,
+          "high_pct": 21.82,
+          "low_pct": 52.7
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0021,
+          "storage_index": 0.2518,
+          "high_pct": 19.48,
+          "low_pct": 51.17
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.2998,
+          "high_pct": 23.32,
+          "low_pct": 41.5
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1074,
+          "storage_index": 0.1444,
+          "high_pct": 10.48,
+          "low_pct": 70.68
+        }
+      }
+    },
+    {
+      "threshold_low": 0.45,
+      "threshold_high": 0.8,
+      "worst_critical_miss": 0.1074,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.225,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.259,
+          "high_pct": 20.68,
+          "low_pct": 52.7
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0021,
+          "storage_index": 0.2315,
+          "high_pct": 17.02,
+          "low_pct": 51.17
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.2894,
+          "high_pct": 22.05,
+          "low_pct": 41.5
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1074,
+          "storage_index": 0.1202,
+          "high_pct": 7.53,
+          "low_pct": 70.68
+        }
+      }
+    },
+    {
+      "threshold_low": 0.45,
+      "threshold_high": 0.85,
+      "worst_critical_miss": 0.1074,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2085,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.2484,
+          "high_pct": 19.4,
+          "low_pct": 52.7
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0021,
+          "storage_index": 0.2073,
+          "high_pct": 14.07,
+          "low_pct": 51.17
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.279,
+          "high_pct": 20.78,
+          "low_pct": 41.5
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1074,
+          "storage_index": 0.0994,
+          "high_pct": 5.0,
+          "low_pct": 70.68
+        }
+      }
+    },
+    {
+      "threshold_low": 0.45,
+      "threshold_high": 0.9,
+      "worst_critical_miss": 0.1074,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.1896,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0127,
+          "storage_index": 0.2326,
+          "high_pct": 17.47,
+          "low_pct": 52.7
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0021,
+          "storage_index": 0.1784,
+          "high_pct": 10.53,
+          "low_pct": 51.17
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0028,
+          "storage_index": 0.2647,
+          "high_pct": 19.03,
+          "low_pct": 41.5
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1074,
+          "storage_index": 0.0826,
+          "high_pct": 2.95,
+          "low_pct": 70.68
+        }
+      }
+    },
+    {
+      "threshold_low": 0.5,
+      "threshold_high": 0.6,
+      "worst_critical_miss": 0.1505,
+      "worst_over_retention": 0.0038,
+      "mean_storage_index": 0.2961,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0233,
+          "storage_index": 0.3059,
+          "high_pct": 27.77,
+          "low_pct": 59.17
+        },
+        "low_light": {
+          "critical_miss_rate": 0.017,
+          "storage_index": 0.2895,
+          "high_pct": 26.3,
+          "low_pct": 61.7
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0085,
+          "storage_index": 0.3832,
+          "high_pct": 35.2,
+          "low_pct": 49.65
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1505,
+          "storage_index": 0.2058,
+          "high_pct": 19.08,
+          "low_pct": 75.97
+        }
+      }
+    },
+    {
+      "threshold_low": 0.5,
+      "threshold_high": 0.65,
+      "worst_critical_miss": 0.1505,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2658,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0233,
+          "storage_index": 0.2815,
+          "high_pct": 24.78,
+          "low_pct": 59.17
+        },
+        "low_light": {
+          "critical_miss_rate": 0.017,
+          "storage_index": 0.2632,
+          "high_pct": 23.08,
+          "low_pct": 61.7
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0085,
+          "storage_index": 0.3323,
+          "high_pct": 28.98,
+          "low_pct": 49.65
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1505,
+          "storage_index": 0.1861,
+          "high_pct": 16.68,
+          "low_pct": 75.97
+        }
+      }
+    },
+    {
+      "threshold_low": 0.5,
+      "threshold_high": 0.7,
+      "worst_critical_miss": 0.1505,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2436,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0233,
+          "storage_index": 0.2663,
+          "high_pct": 22.93,
+          "low_pct": 59.17
+        },
+        "low_light": {
+          "critical_miss_rate": 0.017,
+          "storage_index": 0.2455,
+          "high_pct": 20.93,
+          "low_pct": 61.7
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0085,
+          "storage_index": 0.3034,
+          "high_pct": 25.47,
+          "low_pct": 49.65
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1505,
+          "storage_index": 0.1592,
+          "high_pct": 13.4,
+          "low_pct": 75.97
+        }
+      }
+    },
+    {
+      "threshold_low": 0.5,
+      "threshold_high": 0.75,
+      "worst_critical_miss": 0.1505,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2279,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0233,
+          "storage_index": 0.2571,
+          "high_pct": 21.82,
+          "low_pct": 59.17
+        },
+        "low_light": {
+          "critical_miss_rate": 0.017,
+          "storage_index": 0.2336,
+          "high_pct": 19.48,
+          "low_pct": 61.7
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0085,
+          "storage_index": 0.2858,
+          "high_pct": 23.32,
+          "low_pct": 49.65
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1505,
+          "storage_index": 0.1353,
+          "high_pct": 10.48,
+          "low_pct": 75.97
+        }
+      }
+    },
+    {
+      "threshold_low": 0.5,
+      "threshold_high": 0.8,
+      "worst_critical_miss": 0.1505,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2119,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0233,
+          "storage_index": 0.2478,
+          "high_pct": 20.68,
+          "low_pct": 59.17
+        },
+        "low_light": {
+          "critical_miss_rate": 0.017,
+          "storage_index": 0.2134,
+          "high_pct": 17.02,
+          "low_pct": 61.7
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0085,
+          "storage_index": 0.2754,
+          "high_pct": 22.05,
+          "low_pct": 49.65
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1505,
+          "storage_index": 0.1111,
+          "high_pct": 7.53,
+          "low_pct": 75.97
+        }
+      }
+    },
+    {
+      "threshold_low": 0.5,
+      "threshold_high": 0.85,
+      "worst_critical_miss": 0.1505,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.1955,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0233,
+          "storage_index": 0.2373,
+          "high_pct": 19.4,
+          "low_pct": 59.17
+        },
+        "low_light": {
+          "critical_miss_rate": 0.017,
+          "storage_index": 0.1892,
+          "high_pct": 14.07,
+          "low_pct": 61.7
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0085,
+          "storage_index": 0.265,
+          "high_pct": 20.78,
+          "low_pct": 49.65
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1505,
+          "storage_index": 0.0903,
+          "high_pct": 5.0,
+          "low_pct": 75.97
+        }
+      }
+    },
+    {
+      "threshold_low": 0.5,
+      "threshold_high": 0.9,
+      "worst_critical_miss": 0.1505,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.1765,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0233,
+          "storage_index": 0.2215,
+          "high_pct": 17.47,
+          "low_pct": 59.17
+        },
+        "low_light": {
+          "critical_miss_rate": 0.017,
+          "storage_index": 0.1602,
+          "high_pct": 10.53,
+          "low_pct": 61.7
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0085,
+          "storage_index": 0.2507,
+          "high_pct": 19.03,
+          "low_pct": 49.65
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1505,
+          "storage_index": 0.0735,
+          "high_pct": 2.95,
+          "low_pct": 75.97
+        }
+      }
+    },
+    {
+      "threshold_low": 0.55,
+      "threshold_high": 0.65,
+      "worst_critical_miss": 0.1901,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2545,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0572,
+          "storage_index": 0.2688,
+          "high_pct": 24.78,
+          "low_pct": 66.53
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0488,
+          "storage_index": 0.2498,
+          "high_pct": 23.08,
+          "low_pct": 69.47
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0254,
+          "storage_index": 0.318,
+          "high_pct": 28.98,
+          "low_pct": 57.95
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1901,
+          "storage_index": 0.1813,
+          "high_pct": 16.68,
+          "low_pct": 78.78
+        }
+      }
+    },
+    {
+      "threshold_low": 0.55,
+      "threshold_high": 0.7,
+      "worst_critical_miss": 0.1901,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2324,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0572,
+          "storage_index": 0.2536,
+          "high_pct": 22.93,
+          "low_pct": 66.53
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0488,
+          "storage_index": 0.2322,
+          "high_pct": 20.93,
+          "low_pct": 69.47
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0254,
+          "storage_index": 0.2892,
+          "high_pct": 25.47,
+          "low_pct": 57.95
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1901,
+          "storage_index": 0.1544,
+          "high_pct": 13.4,
+          "low_pct": 78.78
+        }
+      }
+    },
+    {
+      "threshold_low": 0.55,
+      "threshold_high": 0.75,
+      "worst_critical_miss": 0.1901,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2167,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0572,
+          "storage_index": 0.2445,
+          "high_pct": 21.82,
+          "low_pct": 66.53
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0488,
+          "storage_index": 0.2203,
+          "high_pct": 19.48,
+          "low_pct": 69.47
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0254,
+          "storage_index": 0.2715,
+          "high_pct": 23.32,
+          "low_pct": 57.95
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1901,
+          "storage_index": 0.1305,
+          "high_pct": 10.48,
+          "low_pct": 78.78
+        }
+      }
+    },
+    {
+      "threshold_low": 0.55,
+      "threshold_high": 0.8,
+      "worst_critical_miss": 0.1901,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2007,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0572,
+          "storage_index": 0.2352,
+          "high_pct": 20.68,
+          "low_pct": 66.53
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0488,
+          "storage_index": 0.2001,
+          "high_pct": 17.02,
+          "low_pct": 69.47
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0254,
+          "storage_index": 0.2611,
+          "high_pct": 22.05,
+          "low_pct": 57.95
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1901,
+          "storage_index": 0.1063,
+          "high_pct": 7.53,
+          "low_pct": 78.78
+        }
+      }
+    },
+    {
+      "threshold_low": 0.55,
+      "threshold_high": 0.85,
+      "worst_critical_miss": 0.1901,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.1842,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0572,
+          "storage_index": 0.2246,
+          "high_pct": 19.4,
+          "low_pct": 66.53
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0488,
+          "storage_index": 0.1759,
+          "high_pct": 14.07,
+          "low_pct": 69.47
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0254,
+          "storage_index": 0.2507,
+          "high_pct": 20.78,
+          "low_pct": 57.95
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1901,
+          "storage_index": 0.0855,
+          "high_pct": 5.0,
+          "low_pct": 78.78
+        }
+      }
+    },
+    {
+      "threshold_low": 0.55,
+      "threshold_high": 0.9,
+      "worst_critical_miss": 0.1901,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.1652,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0572,
+          "storage_index": 0.2088,
+          "high_pct": 17.47,
+          "low_pct": 66.53
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0488,
+          "storage_index": 0.1469,
+          "high_pct": 10.53,
+          "low_pct": 69.47
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0254,
+          "storage_index": 0.2364,
+          "high_pct": 19.03,
+          "low_pct": 57.95
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.1901,
+          "storage_index": 0.0687,
+          "high_pct": 2.95,
+          "low_pct": 78.78
+        }
+      }
+    },
+    {
+      "threshold_low": 0.6,
+      "threshold_high": 0.7,
+      "worst_critical_miss": 0.2516,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2242,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0876,
+          "storage_index": 0.2438,
+          "high_pct": 22.93,
+          "low_pct": 72.23
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0912,
+          "storage_index": 0.2249,
+          "high_pct": 20.93,
+          "low_pct": 73.7
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0495,
+          "storage_index": 0.2774,
+          "high_pct": 25.47,
+          "low_pct": 64.8
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.2516,
+          "storage_index": 0.1507,
+          "high_pct": 13.4,
+          "low_pct": 80.92
+        }
+      }
+    },
+    {
+      "threshold_low": 0.6,
+      "threshold_high": 0.75,
+      "worst_critical_miss": 0.2516,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2086,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0876,
+          "storage_index": 0.2347,
+          "high_pct": 21.82,
+          "low_pct": 72.23
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0912,
+          "storage_index": 0.213,
+          "high_pct": 19.48,
+          "low_pct": 73.7
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0495,
+          "storage_index": 0.2597,
+          "high_pct": 23.32,
+          "low_pct": 64.8
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.2516,
+          "storage_index": 0.1268,
+          "high_pct": 10.48,
+          "low_pct": 80.92
+        }
+      }
+    },
+    {
+      "threshold_low": 0.6,
+      "threshold_high": 0.8,
+      "worst_critical_miss": 0.2516,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.1925,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0876,
+          "storage_index": 0.2254,
+          "high_pct": 20.68,
+          "low_pct": 72.23
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0912,
+          "storage_index": 0.1928,
+          "high_pct": 17.02,
+          "low_pct": 73.7
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0495,
+          "storage_index": 0.2494,
+          "high_pct": 22.05,
+          "low_pct": 64.8
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.2516,
+          "storage_index": 0.1026,
+          "high_pct": 7.53,
+          "low_pct": 80.92
+        }
+      }
+    },
+    {
+      "threshold_low": 0.6,
+      "threshold_high": 0.85,
+      "worst_critical_miss": 0.2516,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.176,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0876,
+          "storage_index": 0.2148,
+          "high_pct": 19.4,
+          "low_pct": 72.23
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0912,
+          "storage_index": 0.1686,
+          "high_pct": 14.07,
+          "low_pct": 73.7
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0495,
+          "storage_index": 0.239,
+          "high_pct": 20.78,
+          "low_pct": 64.8
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.2516,
+          "storage_index": 0.0818,
+          "high_pct": 5.0,
+          "low_pct": 80.92
+        }
+      }
+    },
+    {
+      "threshold_low": 0.6,
+      "threshold_high": 0.9,
+      "worst_critical_miss": 0.2516,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.1571,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.0876,
+          "storage_index": 0.199,
+          "high_pct": 17.47,
+          "low_pct": 72.23
+        },
+        "low_light": {
+          "critical_miss_rate": 0.0912,
+          "storage_index": 0.1396,
+          "high_pct": 10.53,
+          "low_pct": 73.7
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.0495,
+          "storage_index": 0.2246,
+          "high_pct": 19.03,
+          "low_pct": 64.8
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.2516,
+          "storage_index": 0.065,
+          "high_pct": 2.95,
+          "low_pct": 80.92
+        }
+      }
+    },
+    {
+      "threshold_low": 0.65,
+      "threshold_high": 0.75,
+      "worst_critical_miss": 0.3293,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.2022,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.1159,
+          "storage_index": 0.2295,
+          "high_pct": 21.82,
+          "low_pct": 75.22
+        },
+        "low_light": {
+          "critical_miss_rate": 0.1364,
+          "storage_index": 0.2075,
+          "high_pct": 19.48,
+          "low_pct": 76.92
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.082,
+          "storage_index": 0.249,
+          "high_pct": 23.32,
+          "low_pct": 71.02
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.3293,
+          "storage_index": 0.1227,
+          "high_pct": 10.48,
+          "low_pct": 83.32
+        }
+      }
+    },
+    {
+      "threshold_low": 0.65,
+      "threshold_high": 0.8,
+      "worst_critical_miss": 0.3293,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.1862,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.1159,
+          "storage_index": 0.2202,
+          "high_pct": 20.68,
+          "low_pct": 75.22
+        },
+        "low_light": {
+          "critical_miss_rate": 0.1364,
+          "storage_index": 0.1872,
+          "high_pct": 17.02,
+          "low_pct": 76.92
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.082,
+          "storage_index": 0.2387,
+          "high_pct": 22.05,
+          "low_pct": 71.02
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.3293,
+          "storage_index": 0.0985,
+          "high_pct": 7.53,
+          "low_pct": 83.32
+        }
+      }
+    },
+    {
+      "threshold_low": 0.65,
+      "threshold_high": 0.85,
+      "worst_critical_miss": 0.3293,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.1697,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.1159,
+          "storage_index": 0.2097,
+          "high_pct": 19.4,
+          "low_pct": 75.22
+        },
+        "low_light": {
+          "critical_miss_rate": 0.1364,
+          "storage_index": 0.1631,
+          "high_pct": 14.07,
+          "low_pct": 76.92
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.082,
+          "storage_index": 0.2283,
+          "high_pct": 20.78,
+          "low_pct": 71.02
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.3293,
+          "storage_index": 0.0777,
+          "high_pct": 5.0,
+          "low_pct": 83.32
+        }
+      }
+    },
+    {
+      "threshold_low": 0.65,
+      "threshold_high": 0.9,
+      "worst_critical_miss": 0.3293,
+      "worst_over_retention": 0.0,
+      "mean_storage_index": 0.1507,
+      "per_shift": {
+        "nominal": {
+          "critical_miss_rate": 0.1159,
+          "storage_index": 0.1939,
+          "high_pct": 17.47,
+          "low_pct": 75.22
+        },
+        "low_light": {
+          "critical_miss_rate": 0.1364,
+          "storage_index": 0.1341,
+          "high_pct": 10.53,
+          "low_pct": 76.92
+        },
+        "busy_scene": {
+          "critical_miss_rate": 0.082,
+          "storage_index": 0.2139,
+          "high_pct": 19.03,
+          "low_pct": 71.02
+        },
+        "weak_models": {
+          "critical_miss_rate": 0.3293,
+          "storage_index": 0.0609,
+          "high_pct": 2.95,
+          "low_pct": 83.32
+        }
+      }
+    }
+  ],
+  "notes": "critical_miss_rate is the fraction of segments with expert severity >= 0.80 that were tiered LOW \u2014 keyframe-only, so the moving footage is destroyed. The recommendation minimises storage subject to the WORST-CASE miss rate across all four distributions, not the average."
+}

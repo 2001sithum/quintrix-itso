@@ -143,3 +143,35 @@ known gap, documented rather than silently left broken.
   motion (fade-up on view change, pulsing live indicators) throughout
   `static/app.css`. No new dependencies — pure CSS, keeping the project's
   "no framework" design decision intact.
+
+---
+
+## CCTV pipeline integration — new capability
+
+Added when the `new[pipelne}` Colab pipeline was integrated. Full detail in
+[IMPLEMENTATION.md](IMPLEMENTATION.md); model reconciliation in
+[MODELS.md](MODELS.md); measured evidence in [VALIDATION.md](VALIDATION.md).
+
+| Capability | Status |
+|---|---|
+| Track 1 suspicious-object detector (8 threat classes) | live — verified detecting a Rifle in real footage, forcing HIGH via the hazard floor |
+| Track 2 COCO context detector (7 classes, crowd counts) | live |
+| R3D-18 / UCF-Crime as the deployed action model | live — reported by `GET /api/models` from real checkpoint paths |
+| `engine/fusion.py` — the fusion/scoring stage the reference notebook never built | live |
+| Trained sentiment model (16-D features → 0..1 score) | live — held-out R² 0.94, ρ 0.96, tier accuracy 0.86 |
+| Per-stage reduction telemetry (`stage_stats`) | live — recorded during real runs, rendered by the Workflow Simulator |
+| Workflow Simulator page (5 views) | live — verified in a browser session |
+| Tier-3 grace queue + restore/purge | live — restore, confirm-delete, double-action rejection, and expiry sweep all exercised |
+| Bounded job queue (`engine/jobs.py`) | live — 100 concurrent projects, 100 completed, 0 lost |
+| Threshold generalisation sweep | live — 4 distributions × 6,000 segments |
+| Availability + concurrency benchmarks | live — see VALIDATION.md |
+
+### Reviewer feedback addressed
+
+| Feedback | Response |
+|---|---|
+| *"Clarify which action-recognition model is actually used"* | [MODELS.md](MODELS.md) is now the single source of truth, and `GET /api/models` reports the answer from live config and real checkpoint paths so prose cannot drift from code. **R3D-18 is deployed**; X3D-S is a legacy-profile fallback. |
+| *"Add test evidence for the stated deployment targets"* | [VALIDATION.md](VALIDATION.md) reports measured results. Availability **PASS** (100% over 15,576 requests). Concurrency **FAILED** on first measurement (0/100 completed) — the cause was unbounded thread-per-upload; fixed with a bounded pool and now **PASS** (100/100). Cross-platform is **PARTIAL**: macOS measured, Linux and Windows run in the CI matrix. |
+| *"Tier 3 is irreversible — add a safeguard"* | LOW footage is parked in `purge_queue` for `tier3_grace_hours` (default 24) instead of being deleted at scoring time. Operators can restore (keeping the video) or confirm deletion; a background sweeper enforces the deadline. Every score also records an auditable trace of the reasons that produced it. |
+| *"Tier boundaries were calibrated on one dataset — check they generalise"* | `training/calibrate_thresholds.py` sweeps every boundary pair across four distributions. The original 0.40/0.70 loses **6.43%** of critical segments under weak model confidence; the recommended **0.30/0.90** loses **1.27%** *and* uses less storage. Adopting it is an explicit, audited admin action. |
+| *"Validate with real audio-visual threat scenarios"* | **Not done, and stated as such.** Every model here is vision-only; adding an audio branch is new capability rather than integration. Listed as the most significant outstanding gap in [VALIDATION.md](VALIDATION.md) §5. |

@@ -1,12 +1,10 @@
-name: CI/CD
+name: CI
 
-# Additive pipeline — does not change how the app runs. `test` always runs
-# (PRs + pushes) and never touches infrastructure. `deploy` only runs after
-# `test` passes, only on pushes to main, and only redeploys the existing GCP
-# Compute Engine VM described in docs/DEPLOYMENT.md Option B (git pull +
-# `docker compose up -d --build` on the VM itself) — no new resources are
-# created automatically. See docs/CI_CD.md for the one-time GCP setup and
-# required repo secrets.
+# Validation only — cross-platform test matrix plus a container build check.
+# It never touches infrastructure. Deployment is a separate workflow
+# (.github/workflows/deploy-gcp.yml) so that a docs-only change cannot trigger
+# a deploy and so a release is addressable by image tag.
+# See docs/CI_CD.md.
 
 on:
   push:
@@ -16,24 +14,72 @@ on:
   workflow_dispatch: {}
 
 jobs:
+  # ---------------------------------------------------------------------------
+  # Cross-platform matrix. This job is the evidence for the "runs on Linux,
+  # macOS and Windows" deployment target: the same test suite and the same
+  # platform probe execute on all three, and each uploads its result row.
+  # docs/VALIDATION.md reports what these runs actually measured.
+  # ---------------------------------------------------------------------------
   test:
-    name: Build & test
-    runs-on: ubuntu-latest
+    name: Test (${{ matrix.os }} / py${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.11"]
+        include:
+          - os: ubuntu-latest
+            python: "3.12"
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python }}
+
+      - name: Install ffmpeg (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Install ffmpeg (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ffmpeg
+
+      - name: Install ffmpeg (Windows)
+        if: runner.os == 'Windows'
+        run: choco install ffmpeg -y --no-progress
 
       - name: Install dependencies (CPU torch, matches Dockerfile)
         run: |
-          pip install --no-cache-dir torch==2.5.1 torchvision==0.20.1 \
-            --index-url https://download.pytorch.org/whl/cpu
+          pip install --no-cache-dir torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cpu
           pip install --no-cache-dir -r requirements.txt
+          pip install --no-cache-dir pytest httpx
 
       - name: Python syntax check (server, engine, models)
-        run: python -m compileall -q server.py itso_system.py engine models
+        run: python -m compileall -q server.py itso_system.py engine models training benchmarks
+
+      - name: Unit and integration tests
+        run: python -m pytest tests/ -q --tb=short
+
+      - name: Platform + availability evidence
+        run: python -m benchmarks.run_all --availability-seconds 20 --skip-concurrency
+
+      - name: Upload platform evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-${{ matrix.os }}-py${{ matrix.python }}
+          path: benchmarks/results.json
+          if-no-files-found: warn
+
+  # ---------------------------------------------------------------------------
+  # Container build stays Linux-only — the deployment target is a Linux VM.
+  # ---------------------------------------------------------------------------
+  container:
+    name: Build container
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Validate docker-compose config
         run: docker compose config > /dev/null
@@ -41,23 +87,6 @@ jobs:
       - name: Build Docker image (build-only, not pushed anywhere)
         run: docker build -t quintrix-itso:ci .
 
-  deploy:
-    name: Deploy to GCP (existing Compute Engine VM)
-    needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Redeploy on the VM (git pull + rebuild container in place)
-        run: |
-          gcloud compute ssh "${{ secrets.GCP_VM_NAME }}" \
-            --zone="${{ secrets.GCP_VM_ZONE }}" \
-            --project="${{ secrets.GCP_PROJECT_ID }}" \
-            --command="cd quintrix-itso && git fetch origin main && git reset --hard origin/main && docker compose up -d --build"
+# Deployment lives in .github/workflows/deploy-gcp.yml, which builds the image
+# once and pushes it to Artifact Registry. Two workflows deploying the same VM
+# would race and could half-apply a release, so this one only validates.

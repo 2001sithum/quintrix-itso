@@ -1,0 +1,37 @@
+# Deployment compose file — pulls a pre-built image from Artifact Registry
+# instead of building on the host.
+#
+# docker-compose.yml (build: .) is for local development. On a deployed VM the
+# image is built once in CI and pulled, so the VM needs no source checkout, no
+# build toolchain, and no 2GB of torch wheels downloaded per deploy.
+#
+#   ITSO_IMAGE=<region>-docker.pkg.dev/<project>/<repo>/quintrix-itso:<sha> \
+#     ITSO_PORT=8000 docker compose -f docker-compose.deploy.yml up -d
+services:
+  app:
+    image: ${ITSO_IMAGE:?ITSO_IMAGE must be set to a fully-qualified image tag}
+    restart: unless-stopped
+    ports:
+      # Host port is configurable because it must match whatever the VM's
+      # firewall rule actually opens. The existing deployment is tagged
+      # `http-server-8000` with a rule for tcp:8000, so that is the default;
+      # set ITSO_PORT=80 if you add the `http-server` tag instead.
+      - "${ITSO_PORT:-8000}:8000"
+    volumes:
+      # Both must be persistent: /data holds the SQLite database (WAL mode) and
+      # the entire archive — uploads, tier artefacts, thumbnails and footage
+      # held in the Tier-3 review queue. Losing it loses the recordings.
+      - data:/data
+      - models:/models
+    environment:
+      QUINTRIX_DB: /data/quintrix_itso.db
+      QUINTRIX_ARCHIVE: /data/archive
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=5).status==200 else 1)\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s   # first boot loads ~170MB of model weights
+volumes:
+  data:
+  models:
