@@ -88,12 +88,40 @@ function renderNav() {
 }
 function go(id) { current = id; renderNav(); VIEWS[id](); }
 
+/* Deployment posture — whether this host keeps what you upload.
+   Fetched once at boot so the warning is on screen before anyone drops a file
+   into the upload zone, not after they discover the analysis vanished. */
+let DEPLOY = null;
+
+async function loadDeployment() {
+  try { DEPLOY = await api('/deployment'); } catch { DEPLOY = null; }
+  if (!DEPLOY) return;
+  const warn = [];
+  if (DEPLOY.ephemeral_storage) {
+    warn.push(`<b>Storage on this host is ephemeral.</b> Uploads, analysis results
+      and footage held for review are <b>lost</b> when the instance restarts or
+      sleeps. Treat everything here as disposable.`);
+  }
+  if (DEPLOY.default_admin_password) {
+    warn.push(`<b>The admin account still uses the published default password.</b>
+      Anyone can sign in and administer this instance — set
+      <code>ITSO_ADMIN_PASSWORD</code> before exposing it.`);
+  }
+  if (!warn.length) return;
+  const bar = document.createElement('div');
+  bar.className = 'deploybar';
+  bar.innerHTML = `<span>⚠</span><div>${warn.join(' ')}
+    ${DEPLOY.platform ? `<span class="plat">${esc(DEPLOY.platform)}</span>` : ''}</div>
+    <button class="ghost" title="Dismiss" onclick="this.parentElement.remove()">✕</button>`;
+  document.querySelector('#console')?.prepend(bar);
+}
+
 async function boot() {
   try { const m = await api('/me'); S.role = m.role; S.user = m.username;
     $('#who').textContent = `${m.full_name || m.username} · ${m.role}`; }
   catch { return logout(); }
   $('#auth').classList.add('hidden'); $('#console').classList.remove('hidden');
-  renderNav(); go('dashboard'); pollAlerts();
+  renderNav(); go('dashboard'); pollAlerts(); loadDeployment();
 }
 
 // ---------- VIEWS ----------

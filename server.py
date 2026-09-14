@@ -43,12 +43,24 @@ jobs.recover_orphans()
 def _hash(pw: str) -> str:
     return hashlib.sha256(pw.encode()).hexdigest()
 
+# The seed password is overridable because this image is deployed publicly.
+# A hardcoded admin/admin123 on a public host means any visitor can delete
+# projects, purge held footage and rewrite tiering thresholds. Set
+# ITSO_ADMIN_PASSWORD (a Space/deployment secret) to close that.
+_SEED_ADMIN_PW = os.environ.get("ITSO_ADMIN_PASSWORD", "admin123")
+_DEMO_MODE = os.environ.get("ITSO_DEMO_MODE", "").lower() in ("1", "true", "yes")
+
 if not sm.q("SELECT 1 FROM users WHERE username='admin'", one=True):
     sm.execute("INSERT INTO users(username,full_name,password_hash,role,status,created_at)"
                " VALUES(?,?,?,?,?,?)",
-               ("admin", "System Administrator", _hash("admin123"),
+               ("admin", "System Administrator", _hash(_SEED_ADMIN_PW),
                 "Administrator", "active", sm.now()))
-    sm.log("system", "Default admin account created")
+    if _SEED_ADMIN_PW == "admin123":
+        sm.log("system", "Default admin created with the PUBLISHED default password "
+                         "— set ITSO_ADMIN_PASSWORD before exposing this host",
+               severity="warning")
+    else:
+        sm.log("system", "Default admin account created with a configured password")
 
 app = FastAPI(title="Quintrix ITSO Engine")
 
@@ -1325,3 +1337,25 @@ async def index():
 @app.get("/api/health")
 async def health():
     return {"ok": True, "device": DEVICE}
+
+
+@app.get("/api/deployment")
+async def deployment():
+    """How this instance is deployed, so the UI can be honest about its limits.
+
+    A free Hugging Face Space has no persistent disk: the database and the
+    whole archive are wiped on every rebuild or sleep. Users uploading footage
+    deserve to be told that before they do it, not after.
+    """
+    ephemeral = os.environ.get("ITSO_EPHEMERAL_STORAGE", "").lower() in ("1", "true", "yes")
+    return {
+        "demo_mode": _DEMO_MODE,
+        "ephemeral_storage": ephemeral,
+        "default_admin_password": _SEED_ADMIN_PW == "admin123",
+        "platform": os.environ.get("ITSO_PLATFORM", "self-hosted"),
+        "device": DEVICE,
+        "max_upload_mb": MAX_BYTES // (1024 * 1024),
+        "note": ("Storage is ephemeral on this host — uploads, analysis and held "
+                 "footage are lost when the instance restarts."
+                 if ephemeral else "Storage is persistent on this host."),
+    }

@@ -57,6 +57,18 @@ def default_workers():
 
 
 def max_workers():
+    """Pool size: env override first, then config, then derived from cores.
+
+    The env override exists for constrained hosts. A free Hugging Face Space
+    gets 2 vCPU, where the derived default of 2 workers plus ffmpeg's own
+    threads oversubscribes badly — QUINTRIX_MAX_JOBS=1 there keeps it usable.
+    """
+    env = os.environ.get("QUINTRIX_MAX_JOBS")
+    if env:
+        try:
+            return max(1, min(32, int(env)))
+        except ValueError:
+            pass
     try:
         v = int(sm.get_cfg("max_concurrent_jobs", int, default_workers()))
         return max(1, min(32, v))
