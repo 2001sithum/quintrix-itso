@@ -1,6 +1,8 @@
 """object_detector.py — YOLOv8 object detection (FR11)."""
 import threading, os
 
+from models import device
+
 _model = None
 _lock = threading.Lock()
 _CRITICAL = {"knife", "scissors", "baseball bat", "gun", "fire hydrant",
@@ -29,7 +31,7 @@ def detect(frames, conf=0.35):
     best = {}
     for f in sample:
         try:
-            r = model(f, verbose=False, conf=conf)[0]
+            r = model(f, verbose=False, conf=conf, device=device.select())[0]
         except Exception:
             continue
         for b in r.boxes:

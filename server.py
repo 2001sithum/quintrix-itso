@@ -26,6 +26,7 @@ from engine import fusion
 # and a module-level def shadows a module-level import.
 from engine import analytics as itso_analytics
 from models import sentiment_model
+from models import image_detector
 
 sm.init_db()
 DEVICE = itso_engine.select_device()
@@ -1135,6 +1136,51 @@ async def segment_overlay(sid: str, request: Request):
 
 
 # ---------------------------------------------------------------------------
+# Image Lab — run the detectors on a single still image
+# ---------------------------------------------------------------------------
+IMAGE_ALLOWED = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
+IMAGE_MAX_BYTES = 20 * 1024 * 1024
+
+
+@app.get("/api/detect/info")
+async def detect_info(request: Request, warm: bool = False):
+    require(request)
+    if warm:
+        image_detector.warmup()
+    return image_detector.models_info()
+
+
+# Plain `def`, not `async def`: inference is seconds of blocking GPU/CPU work,
+# and a sync handler runs in FastAPI's threadpool instead of stalling the event
+# loop that serves every other request (including the 2s status poll).
+@app.post("/api/detect/image")
+def detect_image(request: Request, file: UploadFile = File(...),
+                 conf: float = Form(0.35), track1: bool = Form(True),
+                 coco: bool = Form(True), imgsz: int = Form(640)):
+    u = require(request)
+    ext = os.path.splitext(file.filename or "")[1].lower()
+    if ext not in IMAGE_ALLOWED:
+        raise HTTPException(400, f"Unsupported image type {ext or '(none)'} — "
+                                 f"use {', '.join(sorted(IMAGE_ALLOWED))}")
+    data = file.file.read(IMAGE_MAX_BYTES + 1)
+    if len(data) > IMAGE_MAX_BYTES:
+        raise HTTPException(400, "Image exceeds 20MB")
+    if not (track1 or coco):
+        raise HTTPException(400, "Select at least one detector")
+    img = image_detector.decode(data)
+    if img is None:
+        raise HTTPException(400, "Could not decode the image")
+    imgsz = 1280 if imgsz >= 1280 else 960 if imgsz >= 960 else 640
+    res = image_detector.detect(img, conf, track1, coco, imgsz)
+    res["filename"] = file.filename
+    sm.log("api", f"Image detection: {file.filename} — {res['summary']['total']} "
+                  f"objects, verdict {res['summary']['verdict']}",
+           user=u["username"],
+           context={"device": res["models"]["device"], "ms": res["timings_ms"]["total"]})
+    return res
+
+
+# ---------------------------------------------------------------------------
 # Operating modes — five documented presets over the tuning knobs
 # ---------------------------------------------------------------------------
 @app.get("/api/modes")
@@ -1336,7 +1382,8 @@ async def index():
 
 @app.get("/api/health")
 async def health():
-    return {"ok": True, "device": DEVICE}
+    from models import device
+    return {"ok": True, "device": DEVICE, "accelerator": device.describe()}
 
 
 @app.get("/api/deployment")

@@ -25,10 +25,12 @@ import threading
 
 import numpy as np
 
+from models import device
+
 _model = None
 _loaded_from = None
 _lock = threading.Lock()
-_DEVICE = "cpu"  # matches the other model modules' convention
+_DEVICE = device.select()
 
 _ROOT = os.path.dirname(os.path.dirname(__file__))
 

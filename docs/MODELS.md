@@ -45,7 +45,7 @@ Selected by the `pipeline_profile` config key, which defaults to `fusion`.
 | 2 | Motion gate | MOG2 background subtraction | not trained | — |
 | 4 | Action / anomaly recognition | **R3D-18** (ResNet3D-18) | UCF-Crime, 14 classes | `weights/r3d18_ucfcrime.pt` |
 | 4 | Track 1 — suspicious objects | **YOLOv8s** (fine-tuned) | 8 threat classes | `weights/yolov8s_suspicious.pt` |
-| 4 | Track 2 — context objects | **YOLOv8s** (stock COCO) | COCO, filtered to 7 classes | `weights/yolov8s.pt` |
+| 4 | Track 2 — context objects | **YOLO11m** (stock COCO; YOLOv8s fallback) | COCO, filtered to 7 classes | `weights/yolo11m.pt` |
 | 4 | Sentiment / threat scoring | **MLP 16→64→32→1** | 18-scenario expert rubric | `weights/sentiment_mlp.pt` |
 | 5 | Tier execution | ffmpeg / OpenCV | — | — |
 

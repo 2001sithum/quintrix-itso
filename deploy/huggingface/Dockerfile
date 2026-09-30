@@ -27,6 +27,9 @@ COPY --chown=user . .
 RUN mkdir -p /data /models && chown -R user:user /data /models /app
 USER user
 
+# Track 2's YOLO11m is public, so fetch it rather than ship it through LFS.
+RUN python -m models.fetch_weights
+
 # A free Space gets 2 vCPU, so QUINTRIX_MAX_JOBS=1: a second pipeline worker
 # would contend with ffmpeg's own threads rather than add throughput.
 ENV TORCH_HOME=/models/torch \

@@ -837,7 +837,7 @@ def _record_remaining_stages(footage_id, segs, totals, tier_counts, cfg, frames_
                      (footage_id,), one=True)
     meta_bytes = (meta_rows or {}).get("b") or 0
     models = (["R3D-18 (UCF-Crime)", "YOLOv8s Track 1 (suspicious)",
-               "YOLOv8s Track 2 (COCO context)", "Sentiment MLP"]
+               track2.model_name() + " Track 2 (COCO context)", "Sentiment MLP"]
               if cfg["profile"] == "fusion"
               else ["X3D-S (Kinetics-400)", "YOLOv8n (COCO)", "MobileNetV3"])
     sm.record_stage(footage_id, 4, "Inference & Fusion", "bytes",
@@ -890,15 +890,8 @@ def _generate_recommendations(footage_id):
 # FR60 — compute device auto selection
 # ---------------------------------------------------------------------------
 def select_device():
-    try:
-        import torch
-        if torch.cuda.is_available():
-            return "cuda"
-        if getattr(torch.backends, "mps", None) and torch.backends.mps.is_available():
-            return "mps"
-    except Exception:
-        pass
-    return "cpu"
+    from models import device
+    return device.select()
 
 
 # ---------------------------------------------------------------------------
