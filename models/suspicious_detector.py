@@ -24,8 +24,13 @@ docs/ARCHITECTURE.md.
 import os
 import threading
 
+from models import device
+
 _model = None
 _lock = threading.Lock()
+# ultralytics predictors keep per-call state, so two job workers sharing one
+# model must not predict concurrently.
+_infer_lock = threading.Lock()
 
 _ROOT = os.path.dirname(os.path.dirname(__file__))
 _WEIGHTS_PATH = os.environ.get(
@@ -102,7 +107,9 @@ def detect_detailed(frames, conf=0.35, stride=1, segment_seconds=15.0):
         f = frames[i]
         h, w = f.shape[:2]
         try:
-            r = model.predict(f, conf=conf, verbose=False)[0]
+            with _infer_lock:
+                r = model.predict(f, conf=conf, verbose=False,
+                                  device=device.select())[0]
         except Exception:
             continue
         seen, boxes = set(), []
