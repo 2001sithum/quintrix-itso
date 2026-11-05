@@ -235,7 +235,7 @@ def model_registry():
          "output": "per-class max confidence + frame hits",
          "active": True},
         {"stage": 4, "ref_stage": 3, "role": "Track 2 — context objects",
-         "name": "YOLOv8s (stock COCO)",
+         "name": t2.model_name() + " (stock COCO)",
          "dataset": ", ".join(sorted(t2.KEEP_CLASSES)),
          "weights": t2.weights_path(), "available": True,
          "input": "~1 fps sampled frames",

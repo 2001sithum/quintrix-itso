@@ -67,6 +67,7 @@ $('#logout').onclick = logout;
 const NAV = [
   { id: 'dashboard', label: 'Dashboard', roles: ['Administrator', 'SecurityOperator', 'User'] },
   { id: 'projects', label: 'Projects', roles: ['Administrator', 'SecurityOperator', 'User'] },
+  { id: 'imagelab', label: 'Image Lab', roles: ['Administrator', 'SecurityOperator', 'User'] },
   { id: 'workflow', label: 'Workflow', roles: ['Administrator', 'SecurityOperator', 'User'] },
   { id: 'analytics', label: 'Analytics', roles: ['Administrator', 'SecurityOperator', 'User'] },
   { id: 'search', label: 'Search', roles: ['Administrator', 'SecurityOperator', 'User'] },
@@ -118,7 +119,7 @@ async function loadDeployment() {
 
 async function boot() {
   try { const m = await api('/me'); S.role = m.role; S.user = m.username;
-    $('#who').textContent = `${m.full_name || m.username} · ${m.role}`; }
+    $('#who').textContent = $('#who').title = `${m.full_name || m.username} · ${m.role}`; }
   catch { return logout(); }
   $('#auth').classList.add('hidden'); $('#console').classList.remove('hidden');
   renderNav(); go('dashboard'); pollAlerts(); loadDeployment();
@@ -2498,8 +2499,12 @@ async function mountMedia(sid) {
       // Tier 3 keeps a keyframe only — show it as a still with its boxes.
       screen.innerHTML = `<img id="cine-img" src="${P.blob}">`;
       const img = $('#cine-img');
+      // The stored keyframe is not frame 0: tier_segmenters.store_low grabs
+      // kf0 at 1/6 of the segment (the midpoint of the first of 3 slices).
+      // Drawing the t=0 boxes over it put detections on the wrong moment.
+      const kfT = (P.overlay?.duration || 0) / 6;
       const size = () => {
-        P.video = { currentTime: 0, clientWidth: img.clientWidth,
+        P.video = { currentTime: kfT, clientWidth: img.clientWidth,
                     clientHeight: img.clientHeight, paused: true };
         drawBoxes(); ambientFromImage(img);
       };
@@ -3284,4 +3289,379 @@ function liveRender() {
         <span class="pill ${f.tier}">${f.tier}</span></div>`;
     }).join('') : '<div class="live-sub" style="color:var(--dimmer)">waiting…</div>';
   }
+}
+
+/* ==========================================================================
+   Image Lab — run the detectors on a single still
+   ==========================================================================
+   The server is asked once at a low confidence floor; the confidence slider
+   then filters client-side, so dragging it re-draws instantly instead of
+   re-running the model for every tick. Changing detectors or resolution does
+   need a fresh inference and re-runs automatically.                          */
+const IL = {
+  file: null, url: null, img: null, res: null, info: null,
+  conf: 0.35, track1: true, coco: true, imgsz: 640, labels: true,
+  hidden: new Set(), hover: -1, busy: false, history: [],
+};
+const IL_FLOOR = 0.10;
+
+VIEWS.imagelab = async () => {
+  V.innerHTML = `<div class="il-head">
+      <div><h2>Image Lab</h2>
+        <p class="sub">Drop a still and run the threat detector and the COCO model on it —
+          the same detectors the video pipeline uses, without cutting a video.</p></div>
+      <div class="il-badges" id="il-badges"><span class="il-badge">loading models…</span></div>
+    </div>
+    <div class="il-grid">
+      <aside class="card il-ctl">
+        <label class="dropzone il-dz" id="il-dz">
+          <input type="file" id="il-file" accept=".jpg,.jpeg,.png,.webp,.bmp" hidden>
+          <div class="il-dz-ico">⬆</div>
+          <b>Drop an image</b>
+          <span>or click · or paste (⌘V)</span>
+          <span class="il-fmt">JPG · PNG · WEBP · BMP — max 20MB</span>
+        </label>
+
+        <div class="il-sec">
+          <div class="il-row"><span>Confidence</span><b id="il-conf-v">${Math.round(IL.conf * 100)}%</b></div>
+          <input type="range" id="il-conf" min="${IL_FLOOR}" max="0.95" step="0.01" value="${IL.conf}">
+        </div>
+
+        <div class="il-sec">
+          <div class="il-lbl">Detectors</div>
+          <label class="il-sw"><input type="checkbox" id="il-t1" ${IL.track1 ? 'checked' : ''}>
+            <i></i><span><b>Threat detector</b><small>Gun · Knife · Rifle · Fire · Smoke · …</small></span></label>
+          <label class="il-sw"><input type="checkbox" id="il-coco" ${IL.coco ? 'checked' : ''}>
+            <i></i><span><b id="il-coco-name">COCO objects</b><small>80 everyday classes — people, bags, vehicles</small></span></label>
+        </div>
+
+        <div class="il-sec">
+          <div class="il-lbl">Inference size</div>
+          <div class="il-seg" id="il-sz">
+            ${[640, 960, 1280].map(s => `<button data-sz="${s}" class="${s === IL.imgsz ? 'on' : ''}">${s}</button>`).join('')}
+          </div>
+          <small class="il-note">Larger finds small, distant objects at the cost of speed.</small>
+        </div>
+
+        <div class="il-sec">
+          <label class="il-sw"><input type="checkbox" id="il-lab" ${IL.labels ? 'checked' : ''}>
+            <i></i><span><b>Box labels</b></span></label>
+        </div>
+
+        <div class="il-actions">
+          <button class="btn" id="il-dl" disabled>Download annotated</button>
+          <button class="btn" id="il-json" disabled>Export JSON</button>
+        </div>
+        <div id="il-hist"></div>
+      </aside>
+
+      <section class="il-main">
+        <div class="il-stage" id="il-stage">
+          <div class="il-empty">
+            <div class="il-empty-art"><span></span><span></span><span></span><span></span></div>
+            <b>No image loaded</b>
+            <span>Detections appear here as boxes, colour-coded by detector.</span>
+          </div>
+        </div>
+        <div class="il-legend">
+          <span class="il-verdict" id="il-verdict"></span>
+          <span><i style="background:${BOX_COLORS.t1critical}"></i>critical threat</span>
+          <span><i style="background:${BOX_COLORS.t1}"></i>suspicious</span>
+          <span><i style="background:${BOX_COLORS.t2}"></i>COCO object</span>
+          <span class="cine-spacer"></span>
+          <span id="il-meta" class="il-mono"></span>
+        </div>
+      </section>
+
+      <aside class="card il-side" id="il-side">
+        <div class="il-side-empty">Results show here once an image is analysed.</div>
+      </aside>
+    </div>`;
+
+  const dz = $('#il-dz'), fi = $('#il-file');
+  fi.onchange = () => fi.files[0] && ilLoad(fi.files[0]);
+  dz.ondragover = e => { e.preventDefault(); dz.classList.add('drag'); };
+  dz.ondragleave = () => dz.classList.remove('drag');
+  dz.ondrop = e => { e.preventDefault(); dz.classList.remove('drag');
+    const f = e.dataTransfer.files[0]; if (f) ilLoad(f); };
+  $('#il-stage').ondragover = dz.ondragover;
+  $('#il-stage').ondrop = e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) ilLoad(f); };
+
+  $('#il-conf').oninput = e => { IL.conf = +e.target.value;
+    $('#il-conf-v').textContent = Math.round(IL.conf * 100) + '%'; ilRender(); };
+  $('#il-t1').onchange = e => { IL.track1 = e.target.checked; ilRun(); };
+  $('#il-coco').onchange = e => { IL.coco = e.target.checked; ilRun(); };
+  $('#il-lab').onchange = e => { IL.labels = e.target.checked; ilDraw(); };
+  $$('#il-sz button').forEach(b => b.onclick = () => {
+    IL.imgsz = +b.dataset.sz;
+    $$('#il-sz button').forEach(x => x.classList.toggle('on', x === b)); ilRun(); });
+  $('#il-dl').onclick = ilDownload;
+  $('#il-json').onclick = ilExportJSON;
+
+  // paste an image straight from the clipboard; one listener per session
+  if (!IL.pasteBound) {
+    IL.pasteBound = true;
+    document.addEventListener('paste', e => {
+      if (current !== 'imagelab') return;
+      const it = [...(e.clipboardData?.items || [])].find(i => i.type.startsWith('image/'));
+      if (it) ilLoad(new File([it.getAsFile()], 'pasted.png', { type: it.type }));
+    });
+    window.addEventListener('resize', () => current === 'imagelab' && ilDraw());
+  }
+
+  // warm the models now so the first upload is not the slow one
+  api('/detect/info?warm=1').then(info => { IL.info = info; ilBadges(); }).catch(() => {});
+  if (IL.file) { ilMountImage(); if (IL.res) ilRender(); }
+  ilHistory();
+};
+
+function ilBadges() {
+  const i = IL.info; if (!i) return;
+  const gpu = i.device !== 'cpu';
+  $('#il-badges').innerHTML = `
+    <span class="il-badge ${gpu ? 'gpu' : ''}"><span class="pulse ${gpu ? '' : 'warn'}"></span>${esc(i.accelerator)}</span>
+    <span class="il-badge">${esc(i.coco.name)}</span>
+    <span class="il-badge ${i.track1.available ? '' : 'off'}">Threat YOLOv8s${i.track1.available ? '' : ' — missing'}</span>
+    ${i.warm === 'warming' ? '<span class="il-badge warm">warming up…</span>' : ''}`;
+  const n = $('#il-coco-name'); if (n) n.textContent = i.coco.name;
+  if (!i.track1.available) { const t = $('#il-t1'); if (t) { t.checked = false; t.disabled = true; IL.track1 = false; } }
+  if (i.warm === 'warming') setTimeout(() => current === 'imagelab' &&
+    api('/detect/info').then(x => { IL.info = x; ilBadges(); }).catch(() => {}), 1500);
+}
+
+function ilLoad(file) {
+  if (!/\.(jpe?g|png|webp|bmp)$/i.test(file.name) && !file.type.startsWith('image/')) {
+    toast('Unsupported file — use JPG, PNG, WEBP or BMP'); return;
+  }
+  if (file.size > 20 * 1024 * 1024) { toast('Image exceeds 20MB'); return; }
+  // history thumbnails still point at older blob URLs — only free orphans
+  if (IL.url && !IL.history.some(h => h.url === IL.url)) URL.revokeObjectURL(IL.url);
+  IL.file = file; IL.url = URL.createObjectURL(file); IL.res = null;
+  IL.hidden.clear(); IL.hover = -1;
+  const v = $('#il-verdict'); if (v) { v.className = 'il-verdict'; v.textContent = ''; }
+  ilMountImage(); ilRun();
+}
+
+function ilMountImage() {
+  $('#il-stage').innerHTML = `<div class="il-frame" id="il-frame">
+      <img id="il-img" src="${IL.url}" alt="">
+      <canvas id="il-cv"></canvas>
+      <div class="il-scan" id="il-scan"></div>
+    </div>`;
+  IL.img = $('#il-img');
+  IL.img.onload = ilDraw;
+  const cv = $('#il-cv');
+  cv.onmousemove = e => {
+    const r = cv.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    // smallest box under the cursor wins, so nested objects stay reachable
+    let best = -1, area = 9;
+    ilVisible().forEach(d => { const [x1, y1, x2, y2] = d.box;
+      if (x >= x1 && x <= x2 && y >= y1 && y <= y2 && (x2 - x1) * (y2 - y1) < area) {
+        area = (x2 - x1) * (y2 - y1); best = d._i; } });
+    if (best !== IL.hover) { IL.hover = best; ilDraw(); ilHighlightRow(); }
+  };
+  cv.onmouseleave = () => { IL.hover = -1; ilDraw(); ilHighlightRow(); };
+}
+
+async function ilRun() {
+  if (!IL.file) return;
+  if (!IL.track1 && !IL.coco) { toast('Enable at least one detector'); return; }
+  IL.busy = true; ilBusy(true);
+  const fd = new FormData();
+  fd.append('file', IL.file, IL.file.name);
+  fd.append('conf', String(Math.min(IL.conf, IL_FLOOR)));
+  fd.append('track1', IL.track1); fd.append('coco', IL.coco);
+  fd.append('imgsz', IL.imgsz);
+  try {
+    const t0 = performance.now();
+    IL.res = await api('/detect/image', { method: 'POST', body: fd });
+    IL.res._rtt = performance.now() - t0;
+    IL.res.detections.forEach((d, i) => d._i = i);
+    IL.info = IL.res.models; ilBadges();
+    Object.entries(IL.res.errors || {}).forEach(([k, v]) => toast(`${k}: ${v}`));
+    ilPushHistory();
+  } catch (e) { toast('Detection failed: ' + e.message); IL.res = null; }
+  IL.busy = false; ilBusy(false); ilRender();
+}
+
+function ilBusy(on) {
+  const s = $('#il-scan'); if (s) s.classList.toggle('on', on);
+  const side = $('#il-side');
+  if (on && side && !IL.res) side.innerHTML = '<div class="il-side-empty"><span class="spin">◌</span> Analysing…</div>';
+}
+
+const ilVisible = () => (IL.res?.detections || [])
+  .filter(d => d.conf >= IL.conf && !IL.hidden.has(d.label));
+
+function ilSummary(dets) {
+  const threats = dets.filter(d => d.track === 1);
+  const crit = dets.some(d => d.critical);
+  return {
+    total: dets.length, people: dets.filter(d => d.label === 'person').length,
+    threats: threats.length,
+    verdict: crit ? 'CRITICAL' : threats.length ? 'SUSPICIOUS' : 'CLEAR',
+  };
+}
+
+function ilRender() {
+  ilDraw();
+  const side = $('#il-side'); if (!side) return;
+  const has = !!IL.res;
+  $('#il-dl').disabled = !has; $('#il-json').disabled = !has;
+  if (!has) return;
+
+  const inConf = IL.res.detections.filter(d => d.conf >= IL.conf);
+  const vis = ilVisible(), s = ilSummary(vis);
+  const v = $('#il-verdict');
+  if (v) { v.className = 'il-verdict ' + s.verdict.toLowerCase();
+    v.textContent = s.verdict === 'CLEAR' ? '✓ No threats' : s.verdict === 'CRITICAL'
+      ? '⚠ Critical threat' : '● Suspicious objects'; }
+
+  const t = IL.res.timings_ms;
+  $('#il-meta').textContent = `${IL.res.image.width}×${IL.res.image.height} · ${IL.imgsz}px · `
+    + `${t.total.toFixed(0)} ms model · ${IL.res.models.device.toUpperCase()}`;
+
+  // group by class for the filter list
+  const groups = {};
+  inConf.forEach(d => { const g = groups[d.label] ||= { label: d.label, n: 0, max: 0, d };
+    g.n++; g.max = Math.max(g.max, d.conf); });
+  const glist = Object.values(groups).sort((a, b) =>
+    (b.d.critical - a.d.critical) || (a.d.track - b.d.track) || (b.n - a.n));
+
+  side.innerHTML = `
+    <div class="il-stats">
+      <div><span>Objects</span><b>${s.total}</b></div>
+      <div><span>People</span><b>${s.people}</b></div>
+      <div><span>Threats</span><b style="color:${s.threats ? 'var(--hi)' : 'var(--ok)'}">${s.threats}</b></div>
+      <div><span>Latency</span><b>${t.total.toFixed(0)}<small>ms</small></b></div>
+    </div>
+    <div class="il-timing">
+      ${t.track1 != null ? `<span>threat ${t.track1.toFixed(0)} ms</span>` : ''}
+      ${t.coco != null ? `<span>coco ${t.coco.toFixed(0)} ms</span>` : ''}
+      <span>round-trip ${IL.res._rtt.toFixed(0)} ms</span>
+    </div>
+
+    <div class="side-block"><h4>Classes <small>— click to hide</small></h4>
+      <div class="il-classes">${glist.length ? glist.map(g => `
+        <button class="il-cls ${IL.hidden.has(g.label) ? 'off' : ''}" data-cls="${esc(g.label)}">
+          <i style="background:${boxColor(g.d)}"></i>${esc(g.label)}<b>${g.n}</b></button>`).join('')
+        : '<span class="il-note">Nothing above the confidence threshold.</span>'}</div>
+    </div>
+
+    <div class="side-block"><h4>Detections</h4>
+      <div class="il-list" id="il-list">${vis.map(d => `
+        <div class="il-det" data-i="${d._i}">
+          <i style="background:${boxColor(d)}"></i>
+          <span class="nm">${esc(d.label)}${d.critical ? ' <em>critical</em>' : ''}</span>
+          <span class="bar"><i style="width:${(d.conf * 100).toFixed(0)}%;background:${boxColor(d)}"></i></span>
+          <span class="pc">${(d.conf * 100).toFixed(0)}%</span>
+        </div>`).join('') || '<div class="il-note">No visible detections.</div>'}
+      </div>
+    </div>`;
+
+  $$('.il-cls', side).forEach(b => b.onclick = () => {
+    const l = b.dataset.cls; IL.hidden.has(l) ? IL.hidden.delete(l) : IL.hidden.add(l); ilRender(); });
+  $$('.il-det', side).forEach(r => {
+    r.onmouseenter = () => { IL.hover = +r.dataset.i; ilDraw(); ilHighlightRow(); };
+    r.onmouseleave = () => { IL.hover = -1; ilDraw(); ilHighlightRow(); };
+  });
+}
+
+function ilHighlightRow() {
+  $$('.il-det').forEach(r => r.classList.toggle('on', +r.dataset.i === IL.hover));
+}
+
+/* Shared by the live canvas and the full-resolution export, so what you
+   download is exactly what you saw. `s` scales strokes/fonts for export.     */
+function ilPaint(ctx, w, h, s = 1) {
+  const dets = ilVisible();
+  const focus = IL.hover >= 0;
+  for (const d of dets) {
+    const [x1, y1, x2, y2] = d.box;
+    const X = x1 * w, Y = y1 * h, W = (x2 - x1) * w, H = (y2 - y1) * h;
+    const col = boxColor(d), on = d._i === IL.hover;
+    ctx.globalAlpha = focus && !on ? 0.25 : 1;
+    ctx.fillStyle = col + (on ? '30' : '14');
+    roundRect(ctx, X, Y, W, H, 4 * s); ctx.fill();
+    ctx.strokeStyle = col; ctx.lineWidth = (on ? 3 : d.critical ? 2.6 : 1.8) * s;
+    if (d.critical) { ctx.shadowColor = col; ctx.shadowBlur = 12 * s; }
+    roundRect(ctx, X, Y, W, H, 4 * s); ctx.stroke();
+    ctx.shadowBlur = 0;
+    if (IL.labels || on) {
+      const label = `${d.label} ${(d.conf * 100).toFixed(0)}%`;
+      ctx.font = `600 ${11 * s}px ui-monospace, SFMono-Regular, Menlo, monospace`;
+      const tw = ctx.measureText(label).width + 12 * s, th = 17 * s;
+      const ly = Y - th - 2 * s < 0 ? Y + 2 * s : Y - th - 2 * s;
+      ctx.fillStyle = col; roundRect(ctx, X, ly, tw, th, 4 * s); ctx.fill();
+      ctx.fillStyle = '#080b12'; ctx.fillText(label, X + 6 * s, ly + 12.5 * s);
+    }
+  }
+  ctx.globalAlpha = 1;
+}
+
+function ilDraw() {
+  const img = $('#il-img'), cv = $('#il-cv');
+  if (!img || !cv || !img.clientWidth) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = img.clientWidth, h = img.clientHeight;
+  cv.style.width = w + 'px'; cv.style.height = h + 'px';
+  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  if (IL.res) ilPaint(ctx, w, h);
+}
+
+function ilDownload() {
+  const img = $('#il-img'); if (!img || !IL.res) return;
+  const w = img.naturalWidth, h = img.naturalHeight;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(img, 0, 0, w, h);
+  const prevHover = IL.hover; IL.hover = -1;
+  ilPaint(ctx, w, h, Math.max(1, Math.min(w, h) / 600));
+  IL.hover = prevHover;
+  c.toBlob(b => ilSave(b, ilBase() + '_detections.png'), 'image/png');
+}
+
+function ilExportJSON() {
+  if (!IL.res) return;
+  const out = { file: IL.res.filename, image: IL.res.image, conf_threshold: IL.conf,
+    imgsz: IL.imgsz, device: IL.res.models.device, timings_ms: IL.res.timings_ms,
+    summary: ilSummary(ilVisible()),
+    detections: ilVisible().map(({ _i, ...d }) => d) };
+  ilSave(new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' }),
+    ilBase() + '_detections.json');
+}
+
+const ilBase = () => (IL.file?.name || 'image').replace(/\.[^.]+$/, '');
+function ilSave(blob, name) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* Session history: the last few analysed images, re-openable without
+   re-uploading. Kept in memory only — nothing about a still is persisted. */
+function ilPushHistory() {
+  IL.history = IL.history.filter(h => h.file !== IL.file);
+  IL.history.unshift({ file: IL.file, url: IL.url, res: IL.res,
+    verdict: IL.res.summary.verdict, n: IL.res.detections.length });
+  IL.history.splice(6).forEach(h => h.url !== IL.url && URL.revokeObjectURL(h.url));
+  ilHistory();
+}
+
+function ilHistory() {
+  const el = $('#il-hist'); if (!el) return;
+  if (!IL.history.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="il-lbl" style="margin-top:18px">This session</div>
+    <div class="il-hist">${IL.history.map((h, i) => `
+      <button class="il-th ${h.file === IL.file ? 'on' : ''}" data-h="${i}" title="${esc(h.file.name)}">
+        <img src="${h.url}" alt=""><span class="${h.verdict.toLowerCase()}"></span></button>`).join('')}</div>`;
+  $$('.il-th', el).forEach(b => b.onclick = () => {
+    const h = IL.history[+b.dataset.h];
+    IL.file = h.file; IL.url = h.url; IL.res = h.res; IL.hidden.clear(); IL.hover = -1;
+    ilMountImage(); ilRender(); ilHistory();
+  });
 }

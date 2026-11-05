@@ -24,7 +24,8 @@ REQUIRED=(
   weights/sentiment_mlp.pt
 )
 OPTIONAL=(
-  weights/yolov8s.pt              # Track 2 — ultralytics re-downloads if absent
+  weights/yolo11m.pt              # Track 2 — Dockerfile also fetches it
+  weights/yolov8s.pt              # old Track 2 — ultralytics re-downloads if absent
   weights/sentiment_metrics.json
   weights/threshold_calibration.json
 )

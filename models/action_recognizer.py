@@ -2,10 +2,12 @@
 import threading, os, json
 import numpy as np
 
+from models import device
+
 _model = None
 _labels = None
 _lock = threading.Lock()
-_DEVICE = "cpu"
+_DEVICE = device.select()
 
 
 def _load():

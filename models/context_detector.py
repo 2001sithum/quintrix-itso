@@ -1,8 +1,8 @@
 """context_detector.py — Stage 3 Track 2: COCO context objects.
 
 "Track 2" from the CCTV segment+inference pipeline. Stock COCO-pretrained
-YOLOv8 (no training needed), filtered down to the handful of classes that
-actually carry surveillance context:
+YOLO11m (no training needed; YOLOv8s before it), filtered down to the handful
+of classes that actually carry surveillance context:
 
     person, backpack, handbag, suitcase, car, motorcycle, bicycle
 
@@ -18,17 +18,23 @@ contract as Track 1: per-class `max_conf` + `frame_hits` over ~1 fps sampling.
 import os
 import threading
 
+from models import device
+
 _model = None
 _class_ids = None
 _lock = threading.Lock()
+_infer_lock = threading.Lock()
 
 _ROOT = os.path.dirname(os.path.dirname(__file__))
 
-# Search order: a vendored copy under weights/, then the project root, then the
-# bare name — which makes ultralytics fetch it on first run. The bare-name
-# fallback is what keeps a fresh clone working with no manual download step.
+# Search order: an explicit override, then YOLO11m (the medium COCO model —
+# ~+7 mAP over YOLOv8s, which matters most on small, distant CCTV subjects),
+# then the older YOLOv8s copies, then the bare name — which makes ultralytics
+# fetch it on first run, so a fresh clone works with no manual download step.
+# `python -m models.fetch_weights` vendors yolo11m.pt into weights/.
 _CANDIDATES = [
     os.environ.get("CONTEXT_WEIGHTS", ""),
+    os.path.join(_ROOT, "weights", "yolo11m.pt"),
     os.path.join(_ROOT, "weights", "yolov8s.pt"),
     os.path.join(_ROOT, "yolov8s.pt"),
 ]
@@ -38,7 +44,14 @@ def _resolve_weights():
     for p in _CANDIDATES:
         if p and os.path.exists(p):
             return p
-    return "yolov8s.pt"
+    return "yolo11m.pt"
+
+
+def model_name():
+    """Display name derived from whichever checkpoint actually resolved."""
+    base = os.path.basename(_resolve_weights()).lower()
+    return {"yolo11m.pt": "YOLO11m", "yolov8s.pt": "YOLOv8s"}.get(
+        base, os.path.splitext(base)[0])
 
 KEEP_CLASSES = {"person", "backpack", "handbag", "suitcase",
                 "car", "motorcycle", "bicycle"}
@@ -84,7 +97,9 @@ def detect_detailed(frames, conf=0.35, stride=1, segment_seconds=15.0):
         f = frames[i]
         h, w = f.shape[:2]
         try:
-            r = model.predict(f, conf=conf, verbose=False)[0]
+            with _infer_lock:
+                r = model.predict(f, conf=conf, verbose=False,
+                                  device=device.select())[0]
         except Exception:
             continue
         seen, boxes = set(), []

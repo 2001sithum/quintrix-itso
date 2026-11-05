@@ -1,8 +1,11 @@
 services:
   app:
     build: .
+    restart: unless-stopped
     ports:
       - "8000:8000"
+    environment:
+      - QUINTRIX_MAX_JOBS=1
     volumes:
       - data:/data
       - models:/models

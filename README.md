@@ -50,7 +50,7 @@ the running service reports the same answer at `GET /api/models`.
 | 2 | Motion gate | MOG2 (Gaussian-mixture background subtraction) |
 | 4 | Action / anomaly | **R3D-18**, UCF-Crime, 14 classes |
 | 4 | Track 1 — threat objects | YOLOv8s fine-tuned: `Gun, Knife, Rifle, Fire, Smoke, Unattended_Bag, Mask, Broken_Glass` |
-| 4 | Track 2 — context | YOLOv8s (COCO), filtered to 7 scene classes |
+| 4 | Track 2 — context | **YOLO11m** (COCO-pretrained), filtered to 7 scene classes |
 | 4 | Significance scoring | Trained MLP over a 16-D fusion vector |
 
 ## Highlights
@@ -102,11 +102,16 @@ uvicorn server:app --reload
 Open **http://localhost:8000**.
 
 > **First upload is slow.** The deployed models load on first use — R3D-18
-> (~130MB) and the two YOLOv8s detectors (~22MB each) ship in `weights/`; the
-> COCO context model is fetched on first run if absent. Give it a minute;
-> everything is cached afterward. Under Docker on macOS inference is CPU-only
-> (the Linux VM can't reach the M2 GPU) — run natively for MPS/GPU. The app
-> auto-selects the best device (FR60).
+> (~130MB) and the Track 1 YOLOv8s (~22MB) ship in `weights/`; the YOLO11m
+> COCO model (~40MB) is fetched with `python -m models.fetch_weights` (the
+> Docker build does this for you) or on first run if absent. Give it a minute;
+> everything is cached afterward.
+>
+> **GPU.** Every model runs on one device chosen at startup: CUDA → Apple
+> silicon (MPS) → CPU. Force one with `QUINTRIX_DEVICE=cpu|mps|cuda`. Under
+> Docker on macOS inference is CPU-only (the Linux VM can't reach the Apple
+> GPU) — run natively for MPS, which is ~4× faster on the detectors. The
+> active device is shown in the Image Lab and at `GET /api/health`.
 >
 > **ffmpeg is required** for lossless stream-copy segmentation. Without it the
 > pipeline falls back to an OpenCV re-encode that inflates storage before
@@ -121,30 +126,34 @@ Open **http://localhost:8000**.
    list of *projects*: open one to see the recordings inside it.
 3. Open a footage to see per-segment objects, actions, threat, hazard,
    significance score, and storage tier, with thumbnails and playback.
-4. **Search** across all segments by time, object, action, tier, and Ssig.
-5. **Dashboard** shows storage savings, tier/threat distribution, and AI
+4. **Image Lab** — drop, click or paste a still image to run the threat
+   detector and YOLO11m (all 80 COCO classes) on it directly. Live confidence
+   slider, per-class filtering, hover-to-inspect, and download of the annotated
+   PNG or a JSON export. `POST /api/detect/image`.
+5. **Search** across all segments by time, object, action, tier, and Ssig.
+6. **Dashboard** shows storage savings, tier/threat distribution, and AI
    recommendations.
-6. **Workflow** walks the pipeline stage by stage on real processed footage —
+7. **Workflow** walks the pipeline stage by stage on real processed footage —
    per-stage reduction, model registry, score traces, savings projections and
    threshold evidence.
-7. **Analytics** breaks down what the models found (by track), the action mix,
+8. **Analytics** breaks down what the models found (by track), the action mix,
    the decision logic (modifier fire rates, channel contribution, Ssig
    distribution against the live thresholds), alerts, and a per-segment timeline.
-8. **Playback** opens a cinematic detection player: the segment's video with
+9. **Playback** opens a cinematic detection player: the segment's video with
    bounding boxes drawn from the models' own output, a per-class presence strip,
    detection ticks on the scrubber, a master timeline across the whole
    recording, continuous playback, and the score trace that tiered it.
    Keyboard: `space` `← →` `, .` `b` `a` `f` `[ ]` `c`.
-9. **Degradation Review Queue** (admin/operator) holds LOW-tier footage before
+10. **Degradation Review Queue** (admin/operator) holds LOW-tier footage before
    it is destroyed, showing a before/after preview of exactly what each
    degradation would discard, with restore, degrade-now and bulk rescue.
-10. **Alerts** (admin/operator) lists high-significance events to acknowledge.
-11. **Configuration** offers five documented **operating modes** — Forensic
+11. **Alerts** (admin/operator) lists high-significance events to acknowledge.
+12. **Configuration** offers five documented **operating modes** — Forensic
     Hold, High Security, Balanced, Storage Economy, Edge/Low Power — each a
     coherent preset with its measured trade-off stated, plus a manual tab for
     every individual parameter. See [docs/MODES.md](docs/MODES.md).
-12. **Logs** (admin) shows the audit trail with a live SSE stream.
-13. **Users** (admin) approves new registrations and assigns roles.
+13. **Logs** (admin) shows the audit trail with a live SSE stream.
+14. **Users** (admin) approves new registrations and assigns roles.
 
 New users register from the sign-in screen and appear as **pending** until an
 admin approves them (FR03).
