@@ -27,6 +27,7 @@ venv/
 # stray binaries that are not source
 *.jpe
 *.jpeg
+vendor_wheels/
 
 
 # vendored Colab drop — contains unredacted Drive paths; the sanitised
